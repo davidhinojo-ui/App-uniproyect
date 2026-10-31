@@ -185,7 +185,7 @@ export const App: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Top Corporate Bar */}
       <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="w-full max-w-[2200px] mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
               <HardHat className="w-6 h-6" />
@@ -228,7 +228,7 @@ export const App: React.FC = () => {
         </div>
 
         {/* Navigation Tabs */}
-        <div className="max-w-7xl mx-auto mt-4 flex gap-1 border-t border-slate-800 pt-2 overflow-x-auto">
+        <div className="w-full max-w-[2200px] mx-auto mt-4 flex gap-1 border-t border-slate-800 pt-2 overflow-x-auto">
           <button
             onClick={() => setSupervisorTab('workers')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
@@ -292,7 +292,7 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Supervisor Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-8">
+      <main className="flex-1 w-full max-w-[2200px] mx-auto w-full p-4 sm:p-8">
         {supervisorTab === 'workers' && (
           <WorkerManagement
             workers={workers}
