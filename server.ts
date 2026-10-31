@@ -12,6 +12,24 @@ import dotenv from 'dotenv';
 // Load environment variables
 dotenv.config();
 
+import {
+  workersDb,
+  projectsDb,
+  timeRecordsDb,
+  auditLogsDb,
+  handleCreateInvitation,
+  handleVerifyInvitation,
+  handleActivateWorker,
+  handleWorkerLogin,
+  handleRevokeWorker,
+  handleTimeRecord,
+  handleGetWorkerTimeRecords,
+  handleGetWorkerDocuments,
+  handleSignDocument,
+  handleGetWorkerProjects,
+  recordAuditLog,
+} from './src/server/workerPortalService.js';
+
 const app = express();
 const PORT = 3000;
 
@@ -407,6 +425,95 @@ app.post('/api/gemini/analyze-structural-expense', async (req, res) => {
   }
 });
 
+// ==========================================
+// RUTAS API: PORTAL DE TRABAJADORES (AISLAMIENTO ZERO-TRUST)
+// ==========================================
+app.post('/api/worker-portal/invitation', handleCreateInvitation);
+app.get('/api/worker-portal/verify', handleVerifyInvitation);
+app.post('/api/worker-portal/activate', handleActivateWorker);
+app.post('/api/worker-portal/login', handleWorkerLogin);
+app.post('/api/worker-portal/revoke', handleRevokeWorker);
+app.post('/api/worker-portal/time-records', handleTimeRecord);
+app.get('/api/worker-portal/time-records', handleGetWorkerTimeRecords);
+app.get('/api/worker-portal/documents', handleGetWorkerDocuments);
+app.post('/api/worker-portal/documents/sign', handleSignDocument);
+app.get('/api/worker-portal/projects', handleGetWorkerProjects);
+
+// ==========================================
+// RUTAS API: PANEL DE SUPERVISIÓN
+// ==========================================
+app.get('/api/supervisor/workers', (req, res) => {
+  res.json({ workers: workersDb });
+});
+
+app.post('/api/supervisor/workers', (req, res) => {
+  try {
+    const { fullName, dniNie, category, hourlyRate, assignedProjectIds, email, phone } = req.body;
+    if (!fullName || !category || !hourlyRate) {
+      return res.status(400).json({ error: 'Faltan campos requeridos (nombre, categoría, coste/hora)' });
+    }
+
+    const newWorker = {
+      id: `w-${Date.now().toString().slice(-4)}`,
+      organizationId: 'org-jose-real',
+      fullName: String(fullName).trim(),
+      dniNie: String(dniNie || '').trim().toUpperCase(),
+      category: String(category).trim(),
+      hourlyRate: Number(hourlyRate),
+      assignedProjectIds: Array.isArray(assignedProjectIds) ? assignedProjectIds : ['proj-001'],
+      status: 'pending' as const,
+      firebaseAuthUid: null,
+      email: email ? String(email).trim().toLowerCase() : undefined,
+      phone: phone ? String(phone).trim() : undefined,
+      activationCount: 0,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    workersDb.push(newWorker);
+    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_CREATED', { workerId: newWorker.id, name: newWorker.fullName }, newWorker.id);
+
+    res.json({ success: true, worker: newWorker });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.put('/api/supervisor/workers/:id', (req, res) => {
+  try {
+    const worker = workersDb.find((w) => w.id === req.params.id);
+    if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
+
+    const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone } = req.body;
+    if (fullName) worker.fullName = fullName;
+    if (category) worker.category = category;
+    if (hourlyRate !== undefined) worker.hourlyRate = Number(hourlyRate);
+    if (assignedProjectIds) worker.assignedProjectIds = assignedProjectIds;
+    if (status) worker.status = status;
+    if (email !== undefined) worker.email = email;
+    if (phone !== undefined) worker.phone = phone;
+    worker.updatedAt = new Date().toISOString();
+
+    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_UPDATED', { workerId: worker.id, changes: req.body }, worker.id);
+
+    res.json({ success: true, worker });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.get('/api/supervisor/projects', (req, res) => {
+  res.json({ projects: projectsDb });
+});
+
+app.get('/api/supervisor/time-records', (req, res) => {
+  res.json({ records: timeRecordsDb });
+});
+
+app.get('/api/supervisor/audit-logs', (req, res) => {
+  res.json({ logs: auditLogsDb });
+});
+
 // Start integration with Vite or production file serving
 async function startServer() {
   const distPath = path.join(process.cwd(), 'dist');
@@ -414,11 +521,11 @@ async function startServer() {
   if (process.env.NODE_ENV !== 'production') {
     try {
       const vite = await createViteServer({
-        server: { middlewareMode: true },
+        server: { middlewareMode: true, hmr: false },
         appType: 'spa',
       });
       app.use(vite.middlewares);
-      console.log('Vite Dev Middleware montado con éxito.');
+      console.log('Vite Dev Middleware montado con éxito (HMR deshabilitado).');
     } catch (err) {
       console.warn('Vite Dev fallback a estáticos en dist:', err);
     }

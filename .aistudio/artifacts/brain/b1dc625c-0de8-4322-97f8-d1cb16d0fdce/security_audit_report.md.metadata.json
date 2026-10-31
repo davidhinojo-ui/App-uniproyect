@@ -1,0 +1,5 @@
+{
+  "summary":  "Auditoría técnica de seguridad y arquitectura previa para el Portal Individual de Trabajadores de UniProyect (davidhinojo-ui/App-uniproyect). Detalla el inventario de datos, riesgos de aislamiento, vectores de fuga transversal y plan de mitigación.",
+  "updatedAt":  "2026-10-31T11:40:05.358042213Z",
+  "userFacing":  true
+}

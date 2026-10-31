@@ -1,0 +1,163 @@
+{
+  "schemaVersion": "1.0.0",
+  "appName": "UniProyect - Portal de Trabajadores y Control de Gastos",
+  "organization": "José Real Construcciones, S.L.",
+  "entities": [
+    {
+      "entityName": "Worker",
+      "collectionName": "workers",
+      "description": "Ficha y registro institucional de trabajadores de la empresa y sus obras asignadas.",
+      "fields": [
+        { "name": "id", "type": "string", "description": "Identificador único inmutable UUID v4", "required": true },
+        { "name": "organizationId", "type": "string", "description": "Identificador de la empresa u organización", "required": true },
+        { "name": "fullName", "type": "string", "description": "Nombre y apellidos completos del trabajador", "required": true },
+        { "name": "dniNie", "type": "string", "description": "Documento nacional de identidad (almacenado seguro, no usado como credencial)", "required": true },
+        { "name": "category", "type": "string", "description": "Categoría laboral (Oficial 1ª, Peón, Encargado, etc.)", "required": true },
+        { "name": "hourlyRate", "type": "number", "description": "Coste por hora de mano de obra en euros para imputación de costes", "required": true },
+        { "name": "assignedProjectIds", "type": "array", "description": "Lista de IDs de obras autorizadas en las que el trabajador puede fichar", "required": true },
+        { "name": "status", "type": "string", "description": "Estado de acceso: pending | active | suspended | revoked", "required": true },
+        { "name": "firebaseAuthUid", "type": "string", "description": "UID de Firebase Authentication vinculado a la cuenta del trabajador (null hasta activación)", "required": false },
+        { "name": "email", "type": "string", "description": "Correo electrónico corporativo o personal para acceso", "required": false },
+        { "name": "phone", "type": "string", "description": "Teléfono de contacto", "required": false },
+        { "name": "activationCount", "type": "number", "description": "Número de activaciones generadas", "required": true },
+        { "name": "createdAt", "type": "string", "description": "Fecha ISO de creación", "required": true },
+        { "name": "updatedAt", "type": "string", "description": "Fecha ISO de última actualización", "required": true }
+      ]
+    },
+    {
+      "entityName": "WorkerInvitation",
+      "collectionName": "worker_invitations",
+      "description": "Tokens criptográficos de un solo uso para activación de portales individuales mediante QR.",
+      "fields": [
+        { "name": "id", "type": "string", "description": "ID único de la invitación", "required": true },
+        { "name": "workerId", "type": "string", "description": "ID del trabajador asociado", "required": true },
+        { "name": "organizationId", "type": "string", "description": "ID de la organización", "required": true },
+        { "name": "tokenHash", "type": "string", "description": "Hash criptográfico SHA-256 del token aleatorio de 256 bits (nunca texto plano)", "required": true },
+        { "name": "expiresAt", "type": "string", "description": "Fecha y hora ISO de caducidad (máximo 48 horas tras emisión)", "required": true },
+        { "name": "consumed", "type": "boolean", "description": "Indicador atómico de si el token ya ha sido consumido", "required": true },
+        { "name": "consumedAt", "type": "string", "description": "Fecha ISO en la que se consumió el token", "required": false },
+        { "name": "consumedByUid", "type": "string", "description": "Firebase Auth UID que consumió la invitación", "required": false },
+        { "name": "revoked", "type": "boolean", "description": "Si el supervisor revocó esta invitación expresamente", "required": true },
+        { "name": "createdByUid", "type": "string", "description": "UID del supervisor que emitió la invitación", "required": true },
+        { "name": "createdAt", "type": "string", "description": "Fecha ISO de generación", "required": true }
+      ]
+    },
+    {
+      "entityName": "TimeRecord",
+      "collectionName": "time_records",
+      "description": "Registros de fichajes (entradas y salidas) para cómputo de jornada e imputación automática de mano de obra a obras.",
+      "fields": [
+        { "name": "id", "type": "string", "description": "ID único del fichaje", "required": true },
+        { "name": "workerId", "type": "string", "description": "ID del trabajador que ficha", "required": true },
+        { "name": "workerName", "type": "string", "description": "Nombre legible del trabajador para listados de supervisión", "required": true },
+        { "name": "firebaseAuthUid", "type": "string", "description": "UID de Firebase Authentication del trabajador (campo inmutable de comprobación de propiedad)", "required": true },
+        { "name": "organizationId", "type": "string", "description": "ID de la organización", "required": true },
+        { "name": "projectId", "type": "string", "description": "ID de la obra a la que se imputa la jornada", "required": true },
+        { "name": "projectName", "type": "string", "description": "Nombre de la obra asignada", "required": true },
+        { "name": "type", "type": "string", "description": "check_in (entrada) o check_out (salida)", "required": true },
+        { "name": "timestamp", "type": "string", "description": "Marca de tiempo ISO del fichaje", "required": true },
+        { "name": "location", "type": "object", "description": "Coordenadas geográficas opcionales de validación en obra (latitud, longitud, precisión)", "required": false },
+        { "name": "notes", "type": "string", "description": "Observaciones opcionales del trabajador o incidencia en obra", "required": false },
+        { "name": "hoursWorked", "type": "number", "description": "Horas calculadas para registros de cierre", "required": false },
+        { "name": "calculatedCost", "type": "number", "description": "Coste económico imputado a la obra (horas * coste hora)", "required": false },
+        { "name": "status", "type": "string", "description": "valid | pending_review | rejected", "required": true },
+        { "name": "createdAt", "type": "string", "description": "Fecha ISO de creación en servidor", "required": true }
+      ]
+    },
+    {
+      "entityName": "WorkerDocument",
+      "collectionName": "worker_documents",
+      "description": "Documentación laboral individualizada (nóminas, contratos, certificados PRL, bajas).",
+      "fields": [
+        { "name": "id", "type": "string", "description": "ID único del documento", "required": true },
+        { "name": "workerId", "type": "string", "description": "ID del trabajador destinatario", "required": true },
+        { "name": "organizationId", "type": "string", "description": "ID de la organización", "required": true },
+        { "name": "title", "type": "string", "description": "Título o descripción del documento", "required": true },
+        { "name": "type", "type": "string", "description": "payroll (nómina) | contract (contrato) | safety_prl | certificate | medical", "required": true },
+        { "name": "period", "type": "string", "description": "Periodo al que corresponde (ej. Octubre 2026)", "required": false },
+        { "name": "fileUrl", "type": "string", "description": "URL segura de descarga (Storage o CDN corporativo)", "required": true },
+        { "name": "fileSize", "type": "number", "description": "Tamaño del archivo en bytes", "required": false },
+        { "name": "uploadedAt", "type": "string", "description": "Fecha ISO de subida por el supervisor", "required": true },
+        { "name": "signed", "type": "boolean", "description": "Si requiere firma digital y ha sido rubricado", "required": true },
+        { "name": "signedAt", "type": "string", "description": "Fecha ISO de firma", "required": false }
+      ]
+    },
+    {
+      "entityName": "Project",
+      "collectionName": "projects",
+      "description": "Obras y proyectos de construcción en ejecución.",
+      "fields": [
+        { "name": "id", "type": "string", "description": "ID único de la obra", "required": true },
+        { "name": "organizationId", "type": "string", "description": "ID de la organización", "required": true },
+        { "name": "code", "type": "string", "description": "Código interno de obra", "required": true },
+        { "name": "name", "type": "string", "description": "Nombre de la obra", "required": true },
+        { "name": "address", "type": "string", "description": "Dirección o emplazamiento", "required": true },
+        { "name": "client", "type": "string", "description": "Cliente o promotora", "required": true },
+        { "name": "status", "type": "string", "description": "active | paused | completed", "required": true },
+        { "name": "supervisorName", "type": "string", "description": "Encargado o supervisor de obra", "required": true },
+        { "name": "laborCostTotal", "type": "number", "description": "Gasto acumulado de mano de obra generado automáticamente por los fichajes", "required": true },
+        { "name": "createdAt", "type": "string", "description": "Fecha ISO de creación", "required": true }
+      ]
+    },
+    {
+      "entityName": "AuditLog",
+      "collectionName": "audit_logs",
+      "description": "Registro inmutable de trazabilidad de accesos, activaciones y modificaciones sensibles.",
+      "fields": [
+        { "name": "id", "type": "string", "description": "ID único del registro de auditoría", "required": true },
+        { "name": "organizationId", "type": "string", "description": "ID de la organización", "required": true },
+        { "name": "actorUid", "type": "string", "description": "UID de quien realizó la acción", "required": true },
+        { "name": "actorRole", "type": "string", "description": "supervisor | worker | system", "required": true },
+        { "name": "action", "type": "string", "description": "INVITATION_CREATED | INVITATION_ACTIVATED | INVITATION_REVOKED | TIME_RECORD_CREATED | WORKER_SUSPENDED", "required": true },
+        { "name": "targetWorkerId", "type": "string", "description": "ID del trabajador afectado", "required": false },
+        { "name": "details", "type": "object", "description": "Detalles técnicos (sin almacenar tokens en texto claro)", "required": true },
+        { "name": "timestamp", "type": "string", "description": "Marca de tiempo ISO inmutable", "required": true }
+      ]
+    }
+  ],
+  "securityRequirements": {
+    "roles": [
+      {
+        "role": "supervisor",
+        "description": "Supervisor o administrador con permisos completos para gestionar obras, trabajadores, costes y emitir accesos."
+      },
+      {
+        "role": "worker",
+        "description": "Trabajador individual con acceso estricto y exclusivo a su propio portal, sus fichajes, sus documentos y las obras que le hayan sido autorizadas."
+      }
+    ],
+    "accessMatrix": {
+      "workers": {
+        "supervisor": { "create": true, "read": true, "update": true, "delete": false },
+        "worker": { "create": false, "read": "onlySelf (where firebaseAuthUid == auth.uid)", "update": false, "delete": false }
+      },
+      "worker_invitations": {
+        "supervisor": { "create": true, "read": true, "update": true, "delete": false },
+        "worker": { "create": false, "read": false, "update": false, "delete": false }
+      },
+      "time_records": {
+        "supervisor": { "create": true, "read": true, "update": true, "delete": false },
+        "worker": { "create": "onlySelf (firebaseAuthUid == auth.uid && workerId matches active profile)", "read": "onlySelf", "update": false, "delete": false }
+      },
+      "worker_documents": {
+        "supervisor": { "create": true, "read": true, "update": true, "delete": true },
+        "worker": { "create": false, "read": "onlySelf (workerId matches authenticated profile)", "update": "onlySelf (signing only)", "delete": false }
+      },
+      "projects": {
+        "supervisor": { "create": true, "read": true, "update": true, "delete": false },
+        "worker": { "create": false, "read": "onlyAuthorized (id in worker.assignedProjectIds)", "update": false, "delete": false }
+      },
+      "audit_logs": {
+        "supervisor": { "create": false, "read": true, "update": false, "delete": false },
+        "worker": { "create": false, "read": false, "update": false, "delete": false }
+      }
+    },
+    "securityNotes": [
+      "Principio de menor privilegio y aislamiento total de datos multi-inquilino.",
+      "Los tokens QR de activación se almacenan exclusivamente como hash SHA-256 con fecha de expiración máxima de 48 horas.",
+      "El consumo del token es atómico y bloquea cualquier reutilización posterior.",
+      "El código QR no transporta datos personales (PII) bajo ningún concepto.",
+      "El logout purga de inmediato datos sensibles del almacenamiento en el navegador."
+    ]
+  }
+}

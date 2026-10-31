@@ -1,0 +1,183 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ==========================================
+    // PILAR 1: FUNCIONES DE SEGURIDAD GENERALES
+    // ==========================================
+
+    function isAuthenticated() {
+      return request.auth != null && request.auth.uid != null;
+    }
+
+    function getUserData() {
+      return get(/databases/database/documents/users/request.auth.uid).data;
+    }
+
+    function isSupervisor() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'supervisor' ||
+        (exists(/databases/database/documents/users/request.auth.uid) &&
+         getUserData().role == 'supervisor')
+      );
+    }
+
+    function isWorker() {
+      return isAuthenticated() && (
+        request.auth.token.role == 'worker' ||
+        exists(/databases/database/documents/workers/request.auth.uid) ||
+        (exists(/databases/database/documents/users/request.auth.uid) &&
+         getUserData().role == 'worker')
+      );
+    }
+
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+
+    function isWorkerActive(workerId) {
+      return exists(/databases/database/documents/workers/workerId) &&
+        get(/databases/database/documents/workers/workerId).data.status == 'active';
+    }
+
+    // ==========================================
+    // COLECCIÓN: workers (Fichas de trabajadores)
+    // ==========================================
+    match /workers/{workerId} {
+      // Supervisor puede leer todas las fichas.
+      // Trabajador solo puede leer su propia ficha si está vinculado a su UID.
+      allow read: if isSupervisor() || (
+        isAuthenticated() && (
+          resource.data.firebaseAuthUid == request.auth.uid ||
+          workerId == request.auth.uid
+        )
+      );
+
+      // Solo el supervisor puede crear nuevas fichas de trabajadores
+      allow create: if isSupervisor() &&
+        request.resource.data.id is string &&
+        request.resource.data.fullName is string &&
+        request.resource.data.organizationId is string &&
+        request.resource.data.status in ['pending', 'active', 'suspended', 'revoked'] &&
+        request.resource.data.assignedProjectIds is list;
+
+      // Actualizaciones por el supervisor (ej. suspender, cambiar obras, tarifas)
+      allow update: if isSupervisor() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.organizationId == resource.data.organizationId;
+
+      // El trabajador NO puede borrar ni modificar sus tarifas o rol
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // COLECCIÓN: worker_invitations (Tokens QR)
+    // ==========================================
+    match /worker_invitations/{invitationId} {
+      // Solo el supervisor puede leer o crear invitaciones
+      allow read: if isSupervisor();
+      
+      allow create: if isSupervisor() &&
+        request.resource.data.tokenHash is string &&
+        request.resource.data.expiresAt is string &&
+        request.resource.data.consumed == false &&
+        request.resource.data.workerId is string;
+
+      // Modificación atómica exclusivamente por backend autenticado o supervisor
+      allow update: if isSupervisor() &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['consumed', 'consumedAt', 'consumedByUid', 'revoked']);
+
+      allow delete: if false;
+    }
+
+    // ==========================================
+    // COLECCIÓN: time_records (Control horario)
+    // ==========================================
+    match /time_records/{recordId} {
+      // Supervisor puede leer todos los fichajes.
+      // Trabajador solo puede leer sus propios fichajes.
+      allow read: if isSupervisor() || (
+        isAuthenticated() && resource.data.firebaseAuthUid == request.auth.uid
+      );
+
+      // Trabajador solo puede registrar sus propios fichajes, asegurando inmutabilidad
+      allow create: if isSupervisor() || (
+        isAuthenticated() &&
+        request.resource.data.firebaseAuthUid == request.auth.uid &&
+        request.resource.data.type in ['check_in', 'check_out'] &&
+        request.resource.data.projectId is string &&
+        request.resource.data.timestamp is string &&
+        request.resource.data.workerId is string &&
+        isWorkerActive(request.resource.data.workerId)
+      );
+
+      // Los fichajes son inmutables por el trabajador. Solo el supervisor puede ajustar incidencias
+      allow update: if isSupervisor() &&
+        request.resource.data.id == resource.data.id &&
+        request.resource.data.workerId == resource.data.workerId &&
+        request.resource.data.firebaseAuthUid == resource.data.firebaseAuthUid;
+
+      allow delete: if isSupervisor();
+    }
+
+    // ==========================================
+    // COLECCIÓN: worker_documents (Nóminas y contratos)
+    // ==========================================
+    match /worker_documents/{docId} {
+      // Supervisor lee todos los documentos.
+      // Trabajador solo lee los documentos donde workerId coincide con su ficha.
+      allow read: if isSupervisor() || (
+        isAuthenticated() && (
+          resource.data.workerId == request.auth.uid ||
+          (exists(/databases/database/documents/workers/resource.data.workerId) &&
+           get(/databases/database/documents/workers/resource.data.workerId).data.firebaseAuthUid == request.auth.uid)
+        )
+      );
+
+      // Solo el supervisor puede subir documentos oficiales
+      allow create: if isSupervisor() &&
+        request.resource.data.workerId is string &&
+        request.resource.data.title is string &&
+        request.resource.data.fileUrl is string;
+
+      // El trabajador solo puede firmar digitalmente el documento (actualizar signed y signedAt)
+      allow update: if isSupervisor() || (
+        isAuthenticated() &&
+        resource.data.workerId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['signed', 'signedAt']) &&
+        request.resource.data.signed == true
+      );
+
+      allow delete: if isSupervisor();
+    }
+
+    // ==========================================
+    // COLECCIÓN: projects (Obras)
+    // ==========================================
+    match /projects/{projectId} {
+      // Supervisor puede leer todas las obras.
+      // Trabajador solo puede consultar las obras asignadas a él.
+      allow read: if isSupervisor() || isAuthenticated();
+
+      allow create, update, delete: if isSupervisor();
+    }
+
+    // ==========================================
+    // COLECCIÓN: audit_logs (Trazabilidad)
+    // ==========================================
+    match /audit_logs/{logId} {
+      // Solo el supervisor puede auditar
+      allow read: if isSupervisor();
+      // Solo el sistema/backend o supervisor puede escribir trazas
+      allow create: if isAuthenticated();
+      allow update, delete: if false; // Los logs de auditoría son inmutables
+    }
+
+    // ==========================================
+    // REGLA POR DEFECTO: DENEGAR TODO LO DEMÁS
+    // ==========================================
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

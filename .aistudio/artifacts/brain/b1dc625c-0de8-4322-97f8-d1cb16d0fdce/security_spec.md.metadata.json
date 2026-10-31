@@ -1,0 +1,5 @@
+{
+  "summary":  "Especificación de Seguridad Zero-Trust y Matriz 'Dirty Dozen' de pruebas de intrusión para el Portal de Trabajadores con acceso QR en UniProyect. Define la generación criptográfica de tokens, consumo atómico, aislamiento de colecciones y mitigación de fugas transversales.",
+  "updatedAt":  "2026-10-31T11:40:58.321755849Z",
+  "userFacing":  true
+}
