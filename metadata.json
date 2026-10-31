@@ -1,0 +1,8 @@
+{
+  "name": "Control de Gastos de Obra - Uniproyect",
+  "description": "Aplicación profesional para el control, gestión y reconocimiento IA de facturas, albaranes, costes de personal y gastos de construcción de José Real Construcciones, S.L.",
+  "permissions": [],
+  "capabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
