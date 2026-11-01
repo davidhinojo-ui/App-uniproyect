@@ -18,3 +18,11 @@ jobs:
       - run: npm run lint
       - run: npm run build
       - run: npm test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+      - run: npx --yes firebase-tools@13.35.1 setup:emulators:firestore
+      - run: npm run test:integration
+        env:
+          FIRESTORE_EMULATOR_JAR: /home/runner/.cache/firebase/emulators/cloud-firestore-emulator-v1.19.8.jar

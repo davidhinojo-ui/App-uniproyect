@@ -42,7 +42,7 @@ export const WorkerLogin: React.FC<WorkerLoginProps> = ({
 
   const handleQuickSelect = (w: Worker) => {
     setIdentifier(w.id);
-    setPin(w.pin || '1234');
+    setPin('');
   };
 
   return (

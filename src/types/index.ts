@@ -12,6 +12,7 @@ export interface Worker {
   firebaseAuthUid?: string | null;
   email?: string;
   phone?: string;
+  pinHash?: string; // Server only; never returned by APIs
   pin?: string; // Para modalidad B (PIN numérico de 4-6 dígitos)
   activationCount: number;
   lastLoginAt?: string;

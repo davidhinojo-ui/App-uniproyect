@@ -4,6 +4,10 @@
  */
 
 import express from 'express';
+import { randomUUID } from 'node:crypto';
+import { access } from './src/server/access.js';
+import { organization } from './src/server/persistence.js';
+import { state } from './src/server/stateContext.js';
 import path from 'path';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI, Type } from '@google/genai';
@@ -38,6 +42,15 @@ const isProduction = process.env.NODE_ENV === 'production' || process.argv[1]?.e
 // Increase payload limits to handle image uploads
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ limit: '50mb', extended: true }));
+
+app.use('/api', access);
+app.get('/api/auth/config', (req, res) => {
+  try {
+    const config = JSON.parse(process.env.FIREBASE_WEB_CONFIG || '{}');
+    if (!config.apiKey || !config.projectId || !config.authDomain) return res.status(503).json({error:'Acceso de supervisor pendiente de configuración'});
+    res.json({apiKey:config.apiKey, projectId:config.projectId, authDomain:config.authDomain, appId:config.appId});
+  } catch { res.status(503).json({error:'Configuración de acceso no disponible'}); }
+});
 
 // Lazy initialization for Gemini Client
 let geminiClient: GoogleGenAI | null = null;
@@ -455,14 +468,16 @@ app.post('/api/supervisor/workers', (req, res) => {
       return res.status(400).json({ error: 'Faltan campos requeridos (nombre, categoría, coste/hora)' });
     }
 
+    if (!Number.isFinite(Number(hourlyRate)) || Number(hourlyRate) < 0) return res.status(400).json({error:'Tarifa no válida'});
+    if (assignedProjectIds && (!Array.isArray(assignedProjectIds) || assignedProjectIds.some((id:unknown)=>typeof id!=='string' || !projectsDb.some(p=>p.id===id)))) return res.status(400).json({error:'Obras no válidas'});
     const newWorker = {
-      id: `w-${Date.now().toString().slice(-4)}`,
-      organizationId: 'org-jose-real',
+      id: `w-${randomUUID()}`,
+      organizationId: organization,
       fullName: String(fullName).trim(),
       dniNie: String(dniNie || '').trim().toUpperCase(),
       category: String(category).trim(),
       hourlyRate: Number(hourlyRate),
-      assignedProjectIds: Array.isArray(assignedProjectIds) ? assignedProjectIds : ['proj-001'],
+      assignedProjectIds: Array.isArray(assignedProjectIds) ? assignedProjectIds : [],
       status: 'pending' as const,
       firebaseAuthUid: null,
       email: email ? String(email).trim().toLowerCase() : undefined,
@@ -473,7 +488,7 @@ app.post('/api/supervisor/workers', (req, res) => {
     };
 
     workersDb.push(newWorker);
-    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_CREATED', { workerId: newWorker.id, name: newWorker.fullName }, newWorker.id);
+    recordAuditLog(state().actorUid || 'system', 'supervisor', 'WORKER_CREATED', { workerId: newWorker.id, name: newWorker.fullName }, newWorker.id);
 
     res.json({ success: true, worker: newWorker });
   } catch (err: any) {
@@ -487,6 +502,9 @@ app.put('/api/supervisor/workers/:id', (req, res) => {
     if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
 
     const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone } = req.body;
+    if (status !== undefined && !['pending','active','suspended','revoked'].includes(status)) return res.status(400).json({error:'Estado no válido'});
+    if (hourlyRate !== undefined && (!Number.isFinite(Number(hourlyRate)) || Number(hourlyRate)<0)) return res.status(400).json({error:'Tarifa no válida'});
+    if (assignedProjectIds !== undefined && (!Array.isArray(assignedProjectIds) || assignedProjectIds.some((id:unknown)=>typeof id!=='string' || !projectsDb.some(p=>p.id===id)))) return res.status(400).json({error:'Obras no válidas'});
     if (fullName) worker.fullName = fullName;
     if (category) worker.category = category;
     if (hourlyRate !== undefined) worker.hourlyRate = Number(hourlyRate);
@@ -494,9 +512,13 @@ app.put('/api/supervisor/workers/:id', (req, res) => {
     if (status) worker.status = status;
     if (email !== undefined) worker.email = email;
     if (phone !== undefined) worker.phone = phone;
+    if (status === 'suspended' || status === 'revoked') {
+      for (const session of state().sessions) if(session.workerId===worker.id) session.expiresAt=0;
+      for (const invitation of state().invitations.values()) if(invitation.workerId===worker.id) invitation.revoked=true;
+    }
     worker.updatedAt = new Date().toISOString();
 
-    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_UPDATED', { workerId: worker.id, changes: req.body }, worker.id);
+    recordAuditLog(state().actorUid || 'system', 'supervisor', 'WORKER_UPDATED', { workerId: worker.id, changes: { fullName, category, hourlyRate, assignedProjectIds, status, email, phone } }, worker.id);
 
     res.json({ success: true, worker });
   } catch (err: any) {
