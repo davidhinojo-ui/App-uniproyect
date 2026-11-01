@@ -230,9 +230,9 @@ export const App: React.FC = () => {
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       {/* Top Corporate Bar */}
       <header className="sticky top-0 z-30 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 sm:px-8 py-3.5">
-        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="up-workspace mx-auto flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
+            <div className="w-10 h-10 rounded-2xl up-brand bg-gradient-to-br from-blue-600 to-indigo-700 flex items-center justify-center text-white shadow-lg shadow-blue-600/30">
               <HardHat className="w-6 h-6" />
             </div>
             <div>
@@ -260,6 +260,7 @@ export const App: React.FC = () => {
             >
               <button
                 type="button"
+                aria-pressed={viewExperience === 'guided'}
                 onClick={() => handleToggleViewExperience('guided')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   viewExperience === 'guided'
@@ -273,6 +274,7 @@ export const App: React.FC = () => {
 
               <button
                 type="button"
+                aria-pressed={viewExperience === 'complete'}
                 onClick={() => handleToggleViewExperience('complete')}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                   viewExperience === 'complete'
@@ -306,8 +308,9 @@ export const App: React.FC = () => {
         </div>
 
         {/* Navigation Tabs - Highlighted in Complete View or accessible in Guided View */}
-        <div className="max-w-7xl mx-auto mt-4 flex gap-1 border-t border-slate-800 pt-2 overflow-x-auto">
+        <div className="up-workspace mx-auto mt-4 flex gap-1 border-t border-slate-800 pt-2 overflow-x-auto">
           <button
+            aria-pressed={supervisorTab === 'workers'}
             onClick={() => setSupervisorTab('workers')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               supervisorTab === 'workers'
@@ -317,12 +320,13 @@ export const App: React.FC = () => {
           >
             <Users className="w-4 h-4" />
             <span>Trabajadores y Accesos QR</span>
-            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-900/60">
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full up-nav-count">
               {workers.length}
             </span>
           </button>
 
           <button
+            aria-pressed={supervisorTab === 'timerecords'}
             onClick={() => setSupervisorTab('timerecords')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               supervisorTab === 'timerecords'
@@ -332,12 +336,13 @@ export const App: React.FC = () => {
           >
             <Clock className="w-4 h-4" />
             <span>Control Horario y Registro de Jornadas</span>
-            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-900/60">
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full up-nav-count">
               {records.length}
             </span>
           </button>
 
           <button
+            aria-pressed={supervisorTab === 'laborcosts'}
             onClick={() => setSupervisorTab('laborcosts')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               supervisorTab === 'laborcosts'
@@ -347,12 +352,13 @@ export const App: React.FC = () => {
           >
             <TrendingUp className="w-4 h-4" />
             <span>Mano de Obra y Costes</span>
-            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-900/60">
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full up-nav-count">
               {projects.length} obras
             </span>
           </button>
 
           <button
+            aria-pressed={supervisorTab === 'security'}
             onClick={() => setSupervisorTab('security')}
             className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-semibold transition-all cursor-pointer whitespace-nowrap ${
               supervisorTab === 'security'
@@ -370,7 +376,7 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Supervisor Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-8 space-y-8">
+      <main className="flex-1 up-workspace mx-auto w-full p-4 sm:p-8 space-y-8">
         {/* EXPERIENCIA GUIADA: Hero con ACCIONES RÁPIDAS GUIADAS */}
         {viewExperience === 'guided' && (
           <div className="space-y-6">
@@ -389,7 +395,7 @@ export const App: React.FC = () => {
 
             {/* In Vista Guiada, also display the focused Control Horario view */}
             <div className="pt-4 border-t border-slate-800">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                 <div>
                   <h3 className="text-lg font-bold text-white flex items-center gap-2">
                     <Clock className="w-5 h-5 text-blue-400" /> Control Horario y Registro de Jornadas
@@ -430,7 +436,7 @@ export const App: React.FC = () => {
 
             {supervisorTab === 'timerecords' && (
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                   <div>
                     <h2 className="text-xl font-bold text-white">
                       Control Horario y Registro de Jornadas
