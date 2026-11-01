@@ -159,7 +159,7 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
       </div>
 
       {/* Workers Cards / Table */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="up-worker-grid grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredWorkers.map((worker) => {
           const assignedProjectsNames = worker.assignedProjectIds
             .map((pid) => projects.find((p) => p.id === pid)?.name)

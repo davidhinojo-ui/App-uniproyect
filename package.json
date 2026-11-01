@@ -1,12 +1,13 @@
 {
   "name": "control-gastos-obra",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
-    "build": "vite build && esbuild src/server/workerPortalService.ts --platform=node --packages=external --outfile=src/server/workerPortalService.js && esbuild server.ts --platform=node --packages=external --bundle --outfile=dist/server.cjs",
-    "start": "node server.ts",
-    "lint": "tsc --noEmit"
+    "build": "vite build && esbuild src/server/workerPortalService.ts --platform=node --packages=external --outfile=src/server/workerPortalService.js && esbuild server.ts --platform=node --packages=external --bundle --outfile=dist/server.cjs && node scripts/build-metadata.mjs",
+    "start": "node dist/server.cjs",
+    "lint": "tsc --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -37,6 +38,7 @@
     "@types/react-dom": "^19.3.0",
     "autoprefixer": "^10.4.21",
     "esbuild": "^0.25.0",
+    "postcss": "^8.5.15",
     "tailwindcss": "^4.1.14",
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",

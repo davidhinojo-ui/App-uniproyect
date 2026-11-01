@@ -67,10 +67,10 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col pb-24 sm:pb-8">
+    <div className="min-h-screen bg-slate-950 text-slate-100 up-worker-portal flex flex-col">
       {/* Top Header Bar */}
       <header className="sticky top-0 z-40 bg-slate-900/95 backdrop-blur-md border-b border-slate-800 px-4 py-3 sm:px-6">
-        <div className="max-w-lg mx-auto flex items-center justify-between">
+        <div className="max-w-lg mx-auto flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-2xl bg-blue-600/20 border border-blue-500/30 flex items-center justify-center text-blue-400 font-bold">
               <HardHat className="w-5 h-5" />
@@ -133,9 +133,10 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
       </main>
 
       {/* Fixed Bottom Navigation (Mobile First) */}
-      <nav className="fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2 py-2">
+      <nav aria-label="Navegación del portal del trabajador" className="up-worker-nav fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-md border-t border-slate-800 px-2 py-2">
         <div className="max-w-lg mx-auto grid grid-cols-4 gap-1">
           <button
+            aria-current={currentTab === 'clock' ? 'page' : undefined}
             onClick={() => setCurrentTab('clock')}
             className={`flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all cursor-pointer ${
               currentTab === 'clock'
@@ -148,6 +149,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
           </button>
 
           <button
+            aria-current={currentTab === 'history' ? 'page' : undefined}
             onClick={() => setCurrentTab('history')}
             className={`flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all cursor-pointer ${
               currentTab === 'history'
@@ -160,6 +162,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
           </button>
 
           <button
+            aria-current={currentTab === 'documents' ? 'page' : undefined}
             onClick={() => setCurrentTab('documents')}
             className={`flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all cursor-pointer ${
               currentTab === 'documents'
@@ -177,6 +180,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
           </button>
 
           <button
+            aria-current={currentTab === 'projects' ? 'page' : undefined}
             onClick={() => setCurrentTab('projects')}
             className={`flex flex-col items-center justify-center py-2 px-1 rounded-2xl transition-all cursor-pointer ${
               currentTab === 'projects'

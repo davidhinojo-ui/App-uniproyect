@@ -50,7 +50,7 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
   return (
     <div className="space-y-6">
       {/* Hero Banner for Guided Experience */}
-      <div className="bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900/80 border border-blue-500/30 rounded-3xl p-5 sm:p-7 shadow-xl">
+      <div className="up-guided-hero bg-gradient-to-r from-blue-900/40 via-indigo-900/30 to-slate-900/80 border border-blue-500/30 rounded-3xl p-5 sm:p-7 shadow-xl">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
             <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/20 text-blue-300 text-xs font-bold uppercase tracking-wider mb-2">
@@ -76,11 +76,12 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
       </div>
 
       {/* Main Guided Action Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+      <div className="up-guided-grid grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
         {/* Card 1: Fichar Entrada / Salida */}
-        <div
+        <button
+          type="button"
           onClick={onOpenClockIn}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
@@ -101,12 +102,13 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Iniciar Registro</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         {/* Card 2: Generar Pase QR */}
-        <div
+        <button
+          type="button"
           onClick={onOpenQrGenerator}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-blue-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-blue-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-blue-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-blue-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-blue-500/15 border border-blue-500/30 flex items-center justify-center text-blue-400 mb-4 group-hover:scale-110 transition-transform">
@@ -127,12 +129,13 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Emitir Código QR</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         {/* Card 3: Control Horario y Registro de Jornadas */}
-        <div
+        <button
+          type="button"
           onClick={() => onNavigateToTab('timerecords')}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-amber-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-amber-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-amber-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400 mb-4 group-hover:scale-110 transition-transform">
@@ -153,12 +156,13 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Ver Fichajes de Hoy ({records.length})</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         {/* Card 4: Costes de Mano de Obra Acumulada */}
-        <div
+        <button
+          type="button"
           onClick={() => onNavigateToTab('laborcosts')}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-purple-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-purple-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-purple-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-purple-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400 mb-4 group-hover:scale-110 transition-transform">
@@ -179,12 +183,13 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Ver Desglose por Obra</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         {/* Card 5: Entrar como Operario (Probar Espacio Personal) */}
-        <div
+        <button
+          type="button"
           onClick={onOpenWorkerPortalLogin}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-sky-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-sky-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-sky-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-sky-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400 mb-4 group-hover:scale-110 transition-transform">
@@ -205,12 +210,13 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Abrir Portal Operario</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
 
         {/* Card 6: Auditoría y Seguridad Zero-Trust */}
-        <div
+        <button
+          type="button"
           onClick={() => onNavigateToTab('security')}
-          className="group bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer flex flex-col justify-between"
+          className="group text-left bg-slate-900/90 border border-slate-800 hover:border-emerald-500/60 rounded-3xl p-5 sm:p-6 shadow-xl hover:shadow-emerald-500/10 transition-all cursor-pointer flex flex-col justify-between"
         >
           <div>
             <div className="w-12 h-12 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400 mb-4 group-hover:scale-110 transition-transform">
@@ -231,7 +237,7 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
             <span>Ver Matriz de Seguridad</span>
             <ArrowRight className="w-4 h-4" />
           </div>
-        </div>
+        </button>
       </div>
     </div>
   );
