@@ -1,11 +1,13 @@
 /** Run only after an authenticated, consistent backup of the old live process has been secured. */
 import { readFileSync } from 'node:fs';
-import { getFirestore } from 'firebase-admin/firestore';
-import { adminApp, organization } from '../src/server/persistence.js';
+import { gunzipSync } from 'node:zlib';
+import { firestoreDb, organization } from '../src/server/persistence.js';
 import { hashPin } from '../src/server/credentials.js';
 const file=process.argv[2];
 if(!file || !process.env.GOOGLE_CLOUD_PROJECT)throw new Error('Snapshot path and explicit GOOGLE_CLOUD_PROJECT required');
-const snapshot=JSON.parse(readFileSync(file,'utf8'));
+const bytes=readFileSync(file);
+const snapshot=JSON.parse((bytes[0]===0x1f && bytes[1]===0x8b ? gunzipSync(bytes,{maxOutputLength:128*1024*1024}) : bytes).toString('utf8'));
+if(snapshot.format==='uniproyect-firestore-rest-v1')throw new Error('Historical Firestore backup is not a portal snapshot. Preserve user scopes and prepare an explicit mapping; automatic import is forbidden.');
 const mapping={workers:'workers',projects:'projects',records:'time_records',documents:'worker_documents',invitations:'worker_invitations',audit:'audit_logs'};
 const entries:any[]=[];
 for(const [key,collection] of Object.entries(mapping)){
@@ -23,8 +25,9 @@ for(const [key,collection] of Object.entries(mapping)){
 }
 if(entries.length>450)throw new Error('Snapshot exceeds atomic import size; staged migration required');
 if(!process.argv.includes('--apply')){console.log(JSON.stringify({valid:true,records:entries.length,applied:false}));process.exit(0);}
-const root=getFirestore(adminApp()).collection('uniproyect_orgs').doc(organization);
-await getFirestore(adminApp()).runTransaction(async tx=>{
+const db=firestoreDb();
+const root=db.collection('uniproyect_orgs').doc(organization);
+await db.runTransaction(async tx=>{
  const existing=await tx.get(root);
  const collections=await Promise.all(Object.values(mapping).map(name=>tx.get(root.collection(name).limit(1))));
  if(existing.exists || collections.some(s=>!s.empty))throw new Error('Destination not empty: refusing overwrite');

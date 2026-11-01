@@ -2,11 +2,19 @@ import { getApps, initializeApp, applicationDefault } from 'firebase-admin/app';
 import { getFirestore } from 'firebase-admin/firestore';
 import { context, type State } from './stateContext.js';
 import { hashPin } from './credentials.js';
+import { firestoreTarget } from './firestoreTarget.js';
 export const organization = process.env.UNIPROYECT_ORGANIZATION_ID || 'org-jose-real';
-export function adminApp() { return getApps()[0] || initializeApp({credential:applicationDefault()}); }
+export function adminApp() { return getApps()[0] || initializeApp({credential:applicationDefault(),projectId:process.env.GOOGLE_CLOUD_PROJECT || process.env.GCLOUD_PROJECT}); }
+export function firestoreDb() {
+ const {projectId,databaseId}=firestoreTarget();
+ const app=adminApp();
+ if(app.options.projectId!==projectId)throw new Error('Firebase app project does not match the configured Firestore project');
+ const db=getFirestore(app,databaseId);
+ return db;
+}
 const collections = {workers:'workers',projects:'projects',records:'time_records',documents:'worker_documents',audit:'audit_logs',sessions:'sessions',attempts:'login_attempts'} as const;
 export async function transact<T>(action:()=>Promise<T>, commit:(result:T)=>boolean):Promise<T> {
- const db=getFirestore(adminApp());
+ const db=firestoreDb();
  const root=db.collection('uniproyect_orgs').doc(organization);
  return db.runTransaction(async tx=>{
   // The lock document serializes concurrent actions, including QR consumption.

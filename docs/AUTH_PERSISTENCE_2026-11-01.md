@@ -20,15 +20,50 @@ No equivalen a validar el login de Google, IAM, configuración, reglas o datos r
 
 ## Activación pendiente: no desplegar todavía
 
-La CLI de Firebase devuelve `Failed to authenticate` al consultar proyectos. El plugin aparece instalado pero no expone operaciones Firebase en esta sesión. No hay proyecto Firebase autenticado, cuenta de servicio/IAM verificados ni identidad del supervisor real acreditados aquí.
+La sesión local no tiene una identidad de Firebase/Google Cloud autenticada para ejecutar el cambio. Las capturas de la sesión del propietario ya identifican el proyecto `linear-connection-w07pf`, la base con nombre `ai-studio-b1dc625c-0de8-4322-97f8-d1cb16d0fdce`, Cloud Run `uniproyect` en `europe-west2` y su cuenta de servicio `112691093407-compute@developer.gserviceaccount.com`. Esto no acredita los claims del propietario ni permisos de despliegue desde esta sesión.
+
+### Hallazgo posterior: los datos históricos no son el snapshot del portal
+
+El propietario confirmó que las obras de la aplicación publicada son ejemplos. La copia histórica descargada y verificada en su Cloud Shell contiene 918 documentos y 25 colecciones, con lectura `2026-11-01T21:45:08.223530Z`. La comprobación de JSON/gzip y nombres únicos no equivale a ensayar una restauración. No se ha subido la copia al repositorio ni se han leído aquí sus valores personales.
+
+| Ruta sin identificadores | Documentos |
+| --- | ---: |
+| documentos | 242 |
+| gastosGenerales | 136 |
+| notifications | 36 |
+| obras | 5 |
+| personal | 60 |
+| plantillaTrabajadores | 10 |
+| users/{uid}/documentos | 155 |
+| users/{uid}/gastosGenerales | 70 |
+| users/{uid}/notifications | 134 |
+| users/{uid}/obras | 3 |
+| users/{uid}/personal | 37 |
+| users/{uid}/plantillaTrabajadores | 18 |
+| users/{uid}/proveedores | 6 |
+| users/{uid}/trabajadores | 6 |
+
+Los recuentos bajo `users/{uid}` agregan varios posibles propietarios; no prueban que todo pertenezca a David. El campo `personal` incluye costes/jornales y no se puede tratar automáticamente como una ficha de trabajador. Los documentos de gastos no equivalen a documentos de trabajador. Tampoco se han confirmado las reglas de propiedad de las colecciones raíz. **No copiar todo al namespace de una única empresa ni convertir estos registros automáticamente con `import-legacy-state.ts`.**
+
+Correcciones preparadas: `firestoreDb()` exige proyecto, base y organización explícitos fuera del emulador; runtime e importador usan la misma base con nombre. `.env.example` incluye solo identificadores públicos y deja la organización pendiente de verificar. El importador rechaza explícitamente `uniproyect-firestore-rest-v1`. El inspector offline `scripts/inspect-firestore-backup.ts` comprueba identidades/rutas/duplicados/inventario y genera campos y recuentos por ámbito con alias de usuario, sin valores de documentos ni UIDs. No importa datos ni marca una migración como finalizada.
+
+Para ejecutar el inspector localmente sobre una copia conservada fuera de Git:
+
+```bash
+node --import tsx scripts/inspect-firestore-backup.ts RUTA_COPIA.json.gz linear-connection-w07pf ai-studio-b1dc625c-0de8-4322-97f8-d1cb16d0fdce
+```
+
+La conexión real sigue pendiente: verificar el UID y su relación con los datos de cada ámbito; definir y probar el adaptador de obras/personal/gastos/documentos sin pérdida; verificar Google Auth/claims; y ensayar la restauración/migración en un entorno aislado antes del despliegue. El cambio de selector de base por sí solo **no** hace aparecer los datos históricos en el portal.
+
+Validación local de esta actualización: TypeScript, build, 35 pruebas unitarias/HTTP/regresión y arranque del servidor compilado correctos. Incluye rechazo del archivo histórico tanto JSON como gzip incluso con `--apply`, sin inicializar Firebase. La integración ahora apunta expresamente a una base con nombre dentro del emulador. No se ha podido repetir localmente esa integración porque la descarga del JAR oficial agotó la conexión; queda pendiente de la CI. No confundir las 7 integraciones de la revisión anterior con pruebas del nuevo selector de base.
 
 Antes de publicar hay que completar, en el proyecto original:
 
-1. Confirmar proyecto Firebase/Google Cloud de UniProyect, base Firestore y cuenta de servicio del Cloud Run existente. Usar identidad administrada y Application Default Credentials; no descargar ni compartir claves privadas. Habilitar proveedor Google y dominio autorizado para la URL real.
+1. Usar el proyecto y la base identificados arriba con identidad administrada y Application Default Credentials; no descargar ni compartir claves privadas. Verificar la edición/metadatos antes de incorporar consultas específicas de edición. Habilitar proveedor Google y dominio autorizado para la URL real.
 2. Configurar `UNIPROYECT_ORGANIZATION_ID`, `PUBLIC_APP_URL` (HTTPS), `FIREBASE_WEB_CONFIG` con los campos públicos de Firebase (`apiKey`, `projectId`, `authDomain`, `appId`). No es una contraseña; la autorización depende de tokens y claims verificados en servidor. No existe archivo con secretos en el repositorio.
 3. Asignar mediante un administrador autenticado los claims role/organizationId al UID real del propietario, conservando sus demás claims. Verificar que una cuenta distinta y otra organización sean rechazadas. Este paso no se ha ejecutado ni se ha inventado un UID.
 4. **Antes de reiniciar la versión antigua**, detener temporalmente las escrituras y extraer una copia coherente del proceso vivo con trabajadores, obras, fichajes, documentos, invitaciones y auditoría. Sus arrays viven en memoria y un nuevo despliegue no puede recuperarlos después. No hay endpoint seguro de exportación integral en el servidor antiguo; se requiere acceso administrativo al entorno original. No es suficiente recopilar pantallas ni reiniciar para añadir una exportación.
-5. Validar el snapshot JSON completo y conservarlo fuera de Git. Ejecutar `node --import tsx scripts/import-legacy-state.ts RUTA_SNAPSHOT` con `GOOGLE_CLOUD_PROJECT` explícito. Sin `--apply` solo valida. Con `--apply`, importa atómicamente a destino vacío, preserva IDs, convierte PIN y omite los tokens QR planos; rechaza destino existente y snapshots parciales. Máximo 450 documentos para esta importación atómica: si hay más, se necesita migración por fases con reconciliación, sin recortar datos. Las sesiones antiguas no se migran: se vuelve a iniciar sesión.
+5. Distinguir la copia Firestore histórica del snapshot del portal. Para un snapshot válido del portal, `node --import tsx scripts/import-legacy-state.ts RUTA_SNAPSHOT` sin `--apply` solo valida. Con `--apply` exige proyecto/base/organización explícitos, importa atómicamente a destino vacío, preserva IDs, convierte PIN y omite tokens QR planos. Rechaza destino existente, snapshots parciales y copias históricas del otro esquema. Su límite de 450 documentos no sirve para la copia histórica de 918 documentos: esa requiere un adaptador y procedimiento propios, sin recortes. Las sesiones antiguas no se migran.
 6. Verificar conteos, relaciones, costes, fichajes y acceso del propietario. El backend rechaza el almacenamiento sin `migrationCompleted=true`, de modo que no se confunda un destino vacío con una migración correcta.
 7. Desplegar primero una revisión sin tráfico público, probar supervisor/trabajador/QR/fichajes y recuperación tras reinicio; después promover la revisión y comprobar `/version.json` y flujos en la URL real. No cambiar la exposición ni permisos de Cloud Run automáticamente.
 

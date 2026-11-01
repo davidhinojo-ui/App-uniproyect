@@ -5,7 +5,7 @@ import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { setTimeout } from 'node:timers/promises';
 import { getFirestore } from 'firebase-admin/firestore';
-import { adminApp,transact,organization } from '../src/server/persistence.js';
+import { firestoreDb,transact,organization } from '../src/server/persistence.js';
 import { state } from '../src/server/stateContext.js';
 import { issueSession,hashPin,digest } from '../src/server/credentials.js';
 import { handleActivateWorker } from '../src/server/workerPortalService.js';
@@ -18,11 +18,12 @@ before(async()=>{
  const jar=process.env.FIRESTORE_EMULATOR_JAR;
  assert.ok(jar,'FIRESTORE_EMULATOR_JAR required; integration tests must not target production');
  const portServer=createServer();portServer.listen(0,'127.0.0.1');await once(portServer,'listening');const addr=portServer.address() as any;const port=addr.port;await new Promise<void>(r=>portServer.close(()=>r()));
- process.env.FIRESTORE_EMULATOR_HOST=`127.0.0.1:${port}`;process.env.GCLOUD_PROJECT='demo-uniproyect-security';
+ process.env.FIRESTORE_EMULATOR_HOST=`127.0.0.1:${port}`;process.env.GCLOUD_PROJECT='demo-uniproyect-security';process.env.GOOGLE_CLOUD_PROJECT='demo-uniproyect-security';
  emulator=spawn('java',['-jar',jar,'--host','127.0.0.1','--port',String(port),'--project_id','demo-uniproyect-security'],{stdio:'ignore'});
  let ready=false;for(let i=0;i<150;i++){try{await fetch(`http://127.0.0.1:${port}/`);ready=true;break;}catch{await setTimeout(100);}if(emulator.exitCode!==null)break;}
  assert.ok(ready,'Firestore emulator failed to start');
- db=getFirestore(adminApp());root=db.collection('uniproyect_orgs').doc(organization);
+ process.env.FIRESTORE_DATABASE_ID='uniproyect-integration';
+ db=firestoreDb();root=db.collection('uniproyect_orgs').doc(organization);
  await root.create({migrationCompleted:true});
  await root.collection('workers').doc('test-worker').create({id:'test-worker',organizationId:organization,status:'active',activationCount:0,pinHash:hashPin('9382')});
 });
