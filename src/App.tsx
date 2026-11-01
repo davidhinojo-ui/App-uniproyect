@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Worker, Project, TimeRecord } from './types/index.js';
+import { Worker, Project, TimeRecord, WorkerInvitation } from './types/index.js';
 import { api } from './services/api.js';
 import { WorkerManagement } from './components/supervisor/WorkerManagement.js';
 import { TimeRecordsOverview } from './components/supervisor/TimeRecordsOverview.js';
 import { ProjectLaborCosts } from './components/supervisor/ProjectLaborCosts.js';
 import { SecurityAuditTab } from './components/supervisor/SecurityAuditTab.js';
+import { QuickGuidedActions } from './components/supervisor/QuickGuidedActions.js';
+import { AssistedClockModal } from './components/supervisor/AssistedClockModal.js';
+import { QrInvitationModal } from './components/supervisor/QrInvitationModal.js';
 import { WorkerPortal } from './components/portal/WorkerPortal.js';
 import { ActivationView } from './components/auth/ActivationView.js';
 import { WorkerLogin } from './components/auth/WorkerLogin.js';
@@ -19,9 +22,15 @@ import {
   Smartphone,
   QrCode,
   RefreshCw,
+  Compass,
+  LayoutGrid,
+  CheckCircle2,
 } from 'lucide-react';
 
 type SupervisorTab = 'workers' | 'timerecords' | 'laborcosts' | 'security';
+type ViewExperience = 'guided' | 'complete';
+
+const VIEW_STORAGE_KEY = 'uniproyect:view_mode';
 
 export const App: React.FC = () => {
   // Routing & View Mode
@@ -29,6 +38,31 @@ export const App: React.FC = () => {
   const [isLoginView, setIsLoginView] = useState(false);
   const [activeWorker, setActiveWorker] = useState<Worker | null>(null);
   const [supervisorTab, setSupervisorTab] = useState<SupervisorTab>('workers');
+
+  // Experience Mode: 'guided' (Vista Guiada) vs 'complete' (Vista Completa)
+  const [viewExperience, setViewExperience] = useState<ViewExperience>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_STORAGE_KEY);
+      if (saved === 'guided' || saved === 'complete') return saved;
+      // Default to guided on mobile screens
+      return window.innerWidth < 768 ? 'guided' : 'complete';
+    } catch {
+      return 'guided';
+    }
+  });
+
+  const handleToggleViewExperience = (mode: ViewExperience) => {
+    setViewExperience(mode);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, mode);
+    } catch {
+      // storage unavailable
+    }
+  };
+
+  // Modals for Guided actions
+  const [isAssistedClockOpen, setIsAssistedClockOpen] = useState(false);
+  const [activeQrInvitation, setActiveQrInvitation] = useState<WorkerInvitation | null>(null);
 
   // Application Data
   const [workers, setWorkers] = useState<Worker[]>([]);
@@ -42,7 +76,6 @@ export const App: React.FC = () => {
       const hash = window.location.hash;
       const search = window.location.search;
 
-      // Check for token in hash (#activar?token=...) or query (?token=...)
       let tokenFound: string | null = null;
       if (hash.includes('token=')) {
         const match = hash.match(/token=([A-Za-z0-9_-]+)/);
@@ -82,7 +115,6 @@ export const App: React.FC = () => {
       setProjects(pList);
       setRecords(rList);
 
-      // If activeWorker is loaded, keep it up to date
       if (activeWorker) {
         const fresh = wList.find((w) => w.id === activeWorker.id);
         if (fresh) setActiveWorker(fresh);
@@ -97,6 +129,19 @@ export const App: React.FC = () => {
   useEffect(() => {
     fetchData();
   }, []);
+
+  // Quick QR generation helper for guided view
+  const handleQuickGenerateQr = async () => {
+    const candidate = workers.find((w) => w.status === 'pending') || workers[0];
+    if (!candidate) return;
+    try {
+      const inv = await api.createInvitation(candidate.id);
+      setActiveQrInvitation(inv);
+      fetchData();
+    } catch (err: any) {
+      alert('Error al generar código QR: ' + err.message);
+    }
+  };
 
   // Handler for QR Activation completed
   const handleWorkerActivated = (worker: Worker) => {
@@ -200,20 +245,53 @@ export const App: React.FC = () => {
                 </span>
               </div>
               <h1 className="text-base sm:text-lg font-bold text-white leading-tight">
-                Panel de Supervisión y Control Horario
+                Control de Obra y Registro de Jornadas
               </h1>
             </div>
           </div>
 
-          {/* Quick Access Switchers */}
-          <div className="flex items-center gap-2">
+          {/* Quick Controls: Experience Selector «Guiada / Completa» + Fast Actions */}
+          <div className="flex items-center flex-wrap gap-2.5">
+            {/* SELECTOR ACCESIBLE «Guiada / Completa» */}
+            <div
+              className="inline-flex p-1 bg-slate-800/90 border border-slate-700 rounded-2xl shadow-inner"
+              role="group"
+              aria-label="Modalidad de visualización: Guiada o Completa"
+            >
+              <button
+                type="button"
+                onClick={() => handleToggleViewExperience('guided')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  viewExperience === 'guided'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Vista Guiada</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => handleToggleViewExperience('complete')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  viewExperience === 'complete'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Vista Completa</span>
+              </button>
+            </div>
+
             <button
               onClick={() => setIsLoginView(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
               title="Abrir pantalla de acceso de trabajadores"
             >
               <Smartphone className="w-4 h-4 text-blue-400" />
-              <span>Portal Trabajador</span>
+              <span>Portal Operario</span>
             </button>
 
             <button
@@ -227,7 +305,7 @@ export const App: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation Tabs */}
+        {/* Navigation Tabs - Highlighted in Complete View or accessible in Guided View */}
         <div className="max-w-7xl mx-auto mt-4 flex gap-1 border-t border-slate-800 pt-2 overflow-x-auto">
           <button
             onClick={() => setSupervisorTab('workers')}
@@ -253,7 +331,7 @@ export const App: React.FC = () => {
             }`}
           >
             <Clock className="w-4 h-4" />
-            <span>Fichajes en Vivo</span>
+            <span>Control Horario y Registro de Jornadas</span>
             <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-slate-900/60">
               {records.length}
             </span>
@@ -292,31 +370,125 @@ export const App: React.FC = () => {
       </header>
 
       {/* Main Supervisor Content */}
-      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-8">
-        {supervisorTab === 'workers' && (
-          <WorkerManagement
-            workers={workers}
-            projects={projects}
-            onRefresh={fetchData}
-            onSelectWorkerForPreview={handleSelectWorkerForPreview}
-          />
+      <main className="flex-1 max-w-7xl mx-auto w-full p-4 sm:p-8 space-y-8">
+        {/* EXPERIENCIA GUIADA: Hero con ACCIONES RÁPIDAS GUIADAS */}
+        {viewExperience === 'guided' && (
+          <div className="space-y-6">
+            <QuickGuidedActions
+              workers={workers}
+              projects={projects}
+              records={records}
+              onOpenClockIn={() => setIsAssistedClockOpen(true)}
+              onOpenQrGenerator={handleQuickGenerateQr}
+              onNavigateToTab={(tab) => {
+                setSupervisorTab(tab);
+                handleToggleViewExperience('complete');
+              }}
+              onOpenWorkerPortalLogin={() => setIsLoginView(true)}
+            />
+
+            {/* In Vista Guiada, also display the focused Control Horario view */}
+            <div className="pt-4 border-t border-slate-800">
+              <div className="flex items-center justify-between mb-4">
+                <div>
+                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                    <Clock className="w-5 h-5 text-blue-400" /> Control Horario y Registro de Jornadas
+                  </h3>
+                  <p className="text-xs text-slate-400">
+                    Últimas entradas y salidas registradas en las obras de José Real Construcciones, S.L.
+                  </p>
+                </div>
+                <button
+                  onClick={() => setIsAssistedClockOpen(true)}
+                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
+                >
+                  + Fichar en Obra
+                </button>
+              </div>
+
+              <TimeRecordsOverview
+                records={records}
+                projects={projects}
+                workers={workers}
+                onRefresh={fetchData}
+              />
+            </div>
+          </div>
         )}
 
-        {supervisorTab === 'timerecords' && (
-          <TimeRecordsOverview
-            records={records}
-            projects={projects}
-            workers={workers}
-            onRefresh={fetchData}
-          />
-        )}
+        {/* EXPERIENCIA COMPLETA: Muestra la pestaña seleccionada */}
+        {viewExperience === 'complete' && (
+          <>
+            {supervisorTab === 'workers' && (
+              <WorkerManagement
+                workers={workers}
+                projects={projects}
+                onRefresh={fetchData}
+                onSelectWorkerForPreview={handleSelectWorkerForPreview}
+              />
+            )}
 
-        {supervisorTab === 'laborcosts' && (
-          <ProjectLaborCosts projects={projects} records={records} />
-        )}
+            {supervisorTab === 'timerecords' && (
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h2 className="text-xl font-bold text-white">
+                      Control Horario y Registro de Jornadas
+                    </h2>
+                    <p className="text-xs text-slate-400">
+                      Monitorización en tiempo real de entradas, salidas y cómputo de horas por obra.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setIsAssistedClockOpen(true)}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
+                  >
+                    + Fichar en Obra
+                  </button>
+                </div>
 
-        {supervisorTab === 'security' && <SecurityAuditTab />}
+                <TimeRecordsOverview
+                  records={records}
+                  projects={projects}
+                  workers={workers}
+                  onRefresh={fetchData}
+                />
+              </div>
+            )}
+
+            {supervisorTab === 'laborcosts' && (
+              <ProjectLaborCosts projects={projects} records={records} />
+            )}
+
+            {supervisorTab === 'security' && <SecurityAuditTab />}
+          </>
+        )}
       </main>
+
+      {/* Guided Assisted Clock-In Modal */}
+      {isAssistedClockOpen && (
+        <AssistedClockModal
+          workers={workers}
+          projects={projects}
+          onClose={() => setIsAssistedClockOpen(false)}
+          onSuccess={fetchData}
+        />
+      )}
+
+      {/* Guided QR Generator Modal */}
+      {activeQrInvitation && (
+        <QrInvitationModal
+          invitation={activeQrInvitation}
+          onClose={() => setActiveQrInvitation(null)}
+          onRevoke={async () => {
+            if (confirm('¿Seguro que desea revocar esta invitación?')) {
+              await api.revokeWorker(activeQrInvitation.workerId);
+              setActiveQrInvitation(null);
+              fetchData();
+            }
+          }}
+        />
+      )}
 
       {/* Footer */}
       <footer className="border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500">
