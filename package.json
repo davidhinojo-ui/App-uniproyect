@@ -1,13 +1,14 @@
 {
   "name": "control-gastos-obra",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "type": "module",
   "scripts": {
     "dev": "tsx server.ts",
     "build": "vite build && esbuild src/server/workerPortalService.ts --platform=node --packages=external --outfile=src/server/workerPortalService.js && esbuild server.ts --platform=node --packages=external --bundle --outfile=dist/server.cjs && node scripts/build-metadata.mjs",
     "start": "node dist/server.cjs",
     "lint": "tsc --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts"
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:integration": "node --import tsx --test tests/persistence.integration.ts"
   },
   "dependencies": {
     "@google/genai": "^2.4.0",
@@ -19,6 +20,7 @@
     "exceljs": "^4.4.0",
     "express": "^4.21.2",
     "firebase": "^12.14.0",
+    "firebase-admin": "^14.5.0",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.8",

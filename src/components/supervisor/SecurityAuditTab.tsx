@@ -24,18 +24,18 @@ export const SecurityAuditTab: React.FC = () => {
   }, []);
 
   const dirtyDozenTests = [
-    { id: 1, name: 'Reutilización de QR ya activado', status: 'PASS', detail: 'Consumo atómico con invalidación inmediata del hash' },
-    { id: 2, name: 'Fuerza bruta de tokens QR', status: 'PASS', detail: '256 bits de entropía criptográfica (32 bytes base64url)' },
-    { id: 3, name: 'Invitación caducada (>48h)', status: 'PASS', detail: 'TTL de 48h con rechazo 400 Bad Request en servidor' },
-    { id: 4, name: 'Lectura transversal de nóminas', status: 'PASS', detail: 'Regla Firestore isOwner(resource.data.workerId)' },
-    { id: 5, name: 'Suplantación en fichaje (Horizontal)', status: 'PASS', detail: 'UID autenticado debe coincidir con worker.firebaseAuthUid' },
-    { id: 6, name: 'Fichaje en obra no autorizada', status: 'PASS', detail: 'Bloqueo 403 Forbidden si projectId ∉ assignedProjectIds' },
-    { id: 7, name: 'Escalada a rol Supervisor', status: 'PASS', detail: 'Verificación estricta de claim supervisor en servidor' },
-    { id: 8, name: 'Modificación de tarifas por operario', status: 'PASS', detail: 'hourlyRate protegido exclusivamente para supervisores' },
-    { id: 9, name: 'Inyección de parámetros en URL', status: 'PASS', detail: 'Validación estricta de tokens base64url en backend' },
-    { id: 10, name: 'Revocación en tiempo real', status: 'PASS', detail: 'Bloqueo instantáneo con worker.status === "revoked"' },
-    { id: 11, name: 'Cero tokens planos en base de datos', status: 'PASS', detail: 'Solo se persiste SHA-256(token), nunca texto plano' },
-    { id: 12, name: 'Dispositivos compartidos en obra', status: 'PASS', detail: 'Purga total de LocalStorage/SessionStorage en logout' },
+    { id: 1, name: 'Reutilización de QR ya activado', status: 'REVISAR', detail: 'Consumo atómico con invalidación inmediata del hash' },
+    { id: 2, name: 'Fuerza bruta de tokens QR', status: 'REVISAR', detail: '256 bits de entropía criptográfica (32 bytes base64url)' },
+    { id: 3, name: 'Invitación caducada (>48h)', status: 'REVISAR', detail: 'TTL de 48h con rechazo 400 Bad Request en servidor' },
+    { id: 4, name: 'Lectura transversal de nóminas', status: 'REVISAR', detail: 'Sesión del trabajador y comprobación de propiedad en servidor' },
+    { id: 5, name: 'Suplantación en fichaje (Horizontal)', status: 'REVISAR', detail: 'La sesión debe corresponder al trabajador que ficha' },
+    { id: 6, name: 'Fichaje en obra no autorizada', status: 'REVISAR', detail: 'Bloqueo 403 Forbidden si projectId ∉ assignedProjectIds' },
+    { id: 7, name: 'Escalada a rol Supervisor', status: 'REVISAR', detail: 'Verificación estricta de claim supervisor en servidor' },
+    { id: 8, name: 'Modificación de tarifas por operario', status: 'REVISAR', detail: 'hourlyRate protegido exclusivamente para supervisores' },
+    { id: 9, name: 'Inyección de parámetros en URL', status: 'REVISAR', detail: 'Validación estricta de tokens base64url en backend' },
+    { id: 10, name: 'Revocación en tiempo real', status: 'REVISAR', detail: 'Bloqueo instantáneo con worker.status === "revoked"' },
+    { id: 11, name: 'Cero tokens planos en base de datos', status: 'REVISAR', detail: 'Solo se persiste SHA-256(token), nunca texto plano' },
+    { id: 12, name: 'Dispositivos compartidos en obra', status: 'REVISAR', detail: 'Revocación de sesión en servidor y limpieza de credenciales locales' },
   ];
 
   return (
@@ -48,11 +48,11 @@ export const SecurityAuditTab: React.FC = () => {
               <ShieldCheck className="w-5 h-5 text-emerald-400" /> Matriz de Seguridad Zero-Trust ("Dirty Dozen")
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Validación continua de las 12 amenazas críticas de aislamiento multi-inquilino.
+              Catálogo de controles. Esta pantalla no ejecuta ni certifica pruebas de seguridad.
             </p>
           </div>
           <span className="px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-bold">
-            12/12 SUPERADAS ✓
+            REVISIÓN DE CONTROLES
           </span>
         </div>
 

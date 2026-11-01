@@ -59,6 +59,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
   // Secure logout with complete session and cache purge (Shared mobile devices)
   const handleSecureLogout = () => {
     if (confirm('¿Cerrar sesión en este dispositivo? Se limpiará la memoria local de forma segura.')) {
+      api.logout().catch(()=>{});
       localStorage.removeItem('uniproyect_worker_id');
       localStorage.removeItem('uniproyect_worker_token');
       sessionStorage.clear();

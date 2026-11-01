@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Worker, Project, TimeRecord, WorkerInvitation } from './types/index.js';
+import { SupervisorLogin } from './components/auth/SupervisorLogin.js';
+import { logoutSupervisor } from './services/supervisorAuth.js';
 import { api } from './services/api.js';
 import { WorkerManagement } from './components/supervisor/WorkerManagement.js';
 import { TimeRecordsOverview } from './components/supervisor/TimeRecordsOverview.js';
@@ -33,6 +35,7 @@ type ViewExperience = 'guided' | 'complete';
 const VIEW_STORAGE_KEY = 'uniproyect:view_mode';
 
 export const App: React.FC = () => {
+  const [supervisorReady, setSupervisorReady] = useState(false);
   // Routing & View Mode
   const [routeToken, setRouteToken] = useState<string | null>(null);
   const [isLoginView, setIsLoginView] = useState(false);
@@ -104,6 +107,7 @@ export const App: React.FC = () => {
 
   // Fetch initial supervisor data
   const fetchData = async () => {
+    if (!supervisorReady) { setLoading(false); return; }
     try {
       setLoading(true);
       const [wList, pList, rList] = await Promise.all([
@@ -127,8 +131,10 @@ export const App: React.FC = () => {
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    if(supervisorReady) fetchData();
+  }, [supervisorReady]);
+
+  useEffect(()=>{ if(activeWorker) api.getMyProjects(activeWorker.id).then(setProjects).catch(()=>setProjects([])); },[activeWorker?.id]);
 
   // Quick QR generation helper for guided view
   const handleQuickGenerateQr = async () => {
@@ -158,6 +164,9 @@ export const App: React.FC = () => {
 
   // Handler for logout
   const handleWorkerLogout = () => {
+    api.logout().catch(()=>{});
+    localStorage.removeItem('uniproyect_worker_token');
+    localStorage.removeItem('uniproyect_worker_id');
     setActiveWorker(null);
     setIsLoginView(false);
     window.location.hash = '';
@@ -191,7 +200,7 @@ export const App: React.FC = () => {
           setIsLoginView(false);
           window.location.hash = '';
         }}
-        activeWorkers={workers}
+        activeWorkers={[]}
       />
     );
   }
@@ -200,8 +209,8 @@ export const App: React.FC = () => {
   if (activeWorker) {
     return (
       <div>
-        {/* Testing Banner to quickly jump back to supervisor */}
-        <div className="bg-slate-900 border-b border-blue-500/30 px-4 py-2 flex items-center justify-between text-xs text-slate-300">
+        {/* Supervisor preview remains restricted to an authenticated supervisor */}
+        {supervisorReady && <div className="bg-slate-900 border-b border-blue-500/30 px-4 py-2 flex items-center justify-between text-xs text-slate-300">
           <div className="flex items-center gap-2">
             <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
             <span>
@@ -214,7 +223,7 @@ export const App: React.FC = () => {
           >
             <ArrowRightLeft className="w-3.5 h-3.5" /> Volver a Supervisor
           </button>
-        </div>
+        </div>}
 
         <WorkerPortal
           worker={activeWorker}
@@ -224,6 +233,8 @@ export const App: React.FC = () => {
       </div>
     );
   }
+
+  if (!supervisorReady) return <SupervisorLogin onSuccess={()=>setSupervisorReady(true)} onWorker={()=>setIsLoginView(true)} />;
 
   // 4. RENDER SUPERVISOR PANEL
   return (
@@ -250,6 +261,7 @@ export const App: React.FC = () => {
             </div>
           </div>
 
+          <button type="button" className="bg-slate-800 text-slate-200 rounded-xl p-2" onClick={async()=>{await logoutSupervisor();setWorkers([]);setProjects([]);setRecords([]);setSupervisorReady(false);}}>Cerrar sesión de supervisor</button>
           {/* Quick Controls: Experience Selector «Guiada / Completa» + Fast Actions */}
           <div className="flex items-center flex-wrap gap-2.5">
             {/* SELECTOR ACCESIBLE «Guiada / Completa» */}
@@ -369,7 +381,7 @@ export const App: React.FC = () => {
             <ShieldCheck className="w-4 h-4" />
             <span>Auditoría Zero-Trust</span>
             <span className="text-[10px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-400">
-              OK
+              Revisar
             </span>
           </button>
         </div>
@@ -499,7 +511,7 @@ export const App: React.FC = () => {
       {/* Footer */}
       <footer className="border-t border-slate-800/80 py-4 px-6 text-center text-xs text-slate-500">
         <p>
-          UniProyect © 2026 José Real Construcciones, S.L. — Aislamiento estricto multi-inquilino y registro horario RGPD compliant.
+          UniProyect © 2026 José Real Construcciones, S.L. — Control de acceso y registro de jornadas.
         </p>
       </footer>
     </div>

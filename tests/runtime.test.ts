@@ -57,7 +57,7 @@ test('version manifest exposes build identification and no configuration', async
   const response = await fetch(`${base}/version.json`);
   const version = await response.json();
   assert.equal(version.app, 'UniProyect');
-  assert.equal(version.version, '1.0.1');
+  assert.equal(version.version, '1.0.2');
   assert.deepEqual(Object.keys(version).sort(), ['app', 'commit', 'dirty', 'version']);
   assert.ok(version.commit === null || /^[0-9a-f]{7,40}$/i.test(version.commit));
 });

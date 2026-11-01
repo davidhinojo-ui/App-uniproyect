@@ -3,265 +3,18 @@ import QRCode from 'qrcode';
 import { Request, Response } from 'express';
 import { Worker, WorkerInvitation, TimeRecord, WorkerDocument, Project, AuditLog } from '../types/index.js';
 
-const ORG_ID = 'org-jose-real';
+import { organization as ORG_ID } from './persistence.js';
 const ORG_NAME = 'José Real Construcciones, S.L.';
 
-// Initial projects with current labor and material costs
-export const projectsDb: Project[] = [
-  {
-    id: 'proj-001',
-    organizationId: ORG_ID,
-    code: 'OBRA-2026-01',
-    name: 'Residencial Las Palmas - Fase II',
-    address: 'Calle Mayor 45, Las Palmas',
-    client: 'Promociones Atlántico S.A.',
-    status: 'active',
-    supervisorName: 'David Hinojo (Supervisor General)',
-    budget: 350000,
-    laborCostTotal: 14250.00,
-    materialCostTotal: 84300.00,
-    createdAt: '2026-01-15T08:00:00Z',
-  },
-  {
-    id: 'proj-002',
-    organizationId: ORG_ID,
-    code: 'OBRA-2026-02',
-    name: 'Rehabilitación Integral Casco Histórico',
-    address: 'Plaza del Rey 12, Centro',
-    client: 'Consorcio Patrimonio Histórico',
-    status: 'active',
-    supervisorName: 'Carlos M. Encargado',
-    budget: 180000,
-    laborCostTotal: 8640.50,
-    materialCostTotal: 42100.00,
-    createdAt: '2026-02-01T08:00:00Z',
-  },
-  {
-    id: 'proj-003',
-    organizationId: ORG_ID,
-    code: 'OBRA-2026-03',
-    name: 'Nave Logística Polígono Oeste',
-    address: 'Parque Industrial Sur, Parcela 8B',
-    client: 'Logística Global Express',
-    status: 'active',
-    supervisorName: 'David Hinojo (Supervisor General)',
-    budget: 520000,
-    laborCostTotal: 19800.00,
-    materialCostTotal: 125400.00,
-    createdAt: '2026-03-10T08:00:00Z',
-  },
-];
+import { list, invitations, state } from './stateContext.js';
+import { hashPin, verifyPin, issueSession, publicData } from './credentials.js';
+export const projectsDb = list('projects');
+export const workersDb = list('workers');
+export const timeRecordsDb = list('records');
+export const workerDocumentsDb = list('documents');
+export const auditLogsDb = list('audit');
+export const workerInvitationsMap = invitations;
 
-// Initial workers database with initial authorized obras and hourly rates
-export const workersDb: Worker[] = [
-  {
-    id: 'w-101',
-    organizationId: ORG_ID,
-    fullName: 'Manuel García Rodríguez',
-    dniNie: '48392019K',
-    category: 'Oficial 1ª Albañil',
-    hourlyRate: 19.50,
-    assignedProjectIds: ['proj-001', 'proj-002'],
-    status: 'active',
-    firebaseAuthUid: 'uid-w-101',
-    email: 'm.garcia@construccionesreal.es',
-    phone: '+34 611 223 344',
-    pin: '1234',
-    activationCount: 1,
-    lastLoginAt: '2026-10-31T08:15:00Z',
-    createdAt: '2026-01-20T08:00:00Z',
-    updatedAt: '2026-10-31T08:00:00Z',
-  },
-  {
-    id: 'w-102',
-    organizationId: ORG_ID,
-    fullName: 'Antonio Romero Benítez',
-    dniNie: '31940283T',
-    category: 'Peón Especialista',
-    hourlyRate: 16.00,
-    assignedProjectIds: ['proj-001', 'proj-003'],
-    status: 'active',
-    firebaseAuthUid: 'uid-w-102',
-    email: 'a.romero@construccionesreal.es',
-    phone: '+34 622 334 455',
-    pin: '4321',
-    activationCount: 1,
-    lastLoginAt: '2026-10-30T17:40:00Z',
-    createdAt: '2026-02-10T08:00:00Z',
-    updatedAt: '2026-10-30T17:40:00Z',
-  },
-  {
-    id: 'w-103',
-    organizationId: ORG_ID,
-    fullName: 'Javier Martínez Delgado',
-    dniNie: '52849102L',
-    category: 'Oficial 1ª Encofrador',
-    hourlyRate: 21.00,
-    assignedProjectIds: ['proj-001', 'proj-003'],
-    status: 'pending', // Pending QR activation
-    firebaseAuthUid: null,
-    email: 'j.martinez@construccionesreal.es',
-    phone: '+34 633 445 566',
-    pin: undefined,
-    activationCount: 0,
-    createdAt: '2026-10-25T09:30:00Z',
-    updatedAt: '2026-10-25T09:30:00Z',
-  },
-  {
-    id: 'w-104',
-    organizationId: ORG_ID,
-    fullName: 'Pedro Sánchez Morales',
-    dniNie: '77291048M',
-    category: 'Oficial Electricista',
-    hourlyRate: 22.50,
-    assignedProjectIds: ['proj-002'],
-    status: 'suspended',
-    firebaseAuthUid: 'uid-w-104',
-    email: 'p.sanchez@construccionesreal.es',
-    phone: '+34 644 556 677',
-    pin: '5678',
-    activationCount: 1,
-    createdAt: '2026-03-01T08:00:00Z',
-    updatedAt: '2026-10-20T11:00:00Z',
-  },
-];
-
-// Initial time records
-export const timeRecordsDb: TimeRecord[] = [
-  {
-    id: 'tr-001',
-    workerId: 'w-101',
-    workerName: 'Manuel García Rodríguez',
-    firebaseAuthUid: 'uid-w-101',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_in',
-    timestamp: '2026-10-31T07:58:12Z',
-    location: { latitude: 28.1235, longitude: -15.4362, address: 'Acceso Puerta 1 - Obra Las Palmas' },
-    notes: 'Jornada normal de hormigonado y tabiquería',
-    status: 'valid',
-    createdAt: '2026-10-31T07:58:12Z',
-  },
-  {
-    id: 'tr-002',
-    workerId: 'w-102',
-    workerName: 'Antonio Romero Benítez',
-    firebaseAuthUid: 'uid-w-102',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_in',
-    timestamp: '2026-10-30T07:55:00Z',
-    location: { latitude: 28.1234, longitude: -15.4360 },
-    notes: 'Entrada puntual',
-    status: 'valid',
-    createdAt: '2026-10-30T07:55:00Z',
-  },
-  {
-    id: 'tr-003',
-    workerId: 'w-102',
-    workerName: 'Antonio Romero Benítez',
-    firebaseAuthUid: 'uid-w-102',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_out',
-    timestamp: '2026-10-30T16:25:00Z',
-    location: { latitude: 28.1236, longitude: -15.4363 },
-    hoursWorked: 8.5,
-    hourlyRate: 16.00,
-    calculatedCost: 136.00,
-    notes: 'Salida de fin de jornada completa',
-    status: 'valid',
-    createdAt: '2026-10-30T16:25:00Z',
-  },
-];
-
-// Initial worker documents
-export const workerDocumentsDb: WorkerDocument[] = [
-  {
-    id: 'doc-001',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Nómina Oficial - Octubre 2026',
-    type: 'payroll',
-    period: 'Octubre 2026',
-    fileUrl: '/docs/nomina-manuel-octubre-2026.pdf',
-    fileSize: 148200,
-    uploadedAt: '2026-10-28T10:00:00Z',
-    signed: true,
-    signedAt: '2026-10-29T12:30:00Z',
-  },
-  {
-    id: 'doc-002',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Certificado Reconocimiento Médico 2026',
-    type: 'medical',
-    period: 'Año 2026',
-    fileUrl: '/docs/medico-manuel-2026.pdf',
-    fileSize: 220500,
-    uploadedAt: '2026-02-14T09:00:00Z',
-    signed: true,
-    signedAt: '2026-02-14T11:00:00Z',
-  },
-  {
-    id: 'doc-003',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Certificado Curso PRL 20 Horas Albañilería',
-    type: 'safety_prl',
-    period: 'Vigente',
-    fileUrl: '/docs/prl-20h-manuel.pdf',
-    fileSize: 310400,
-    uploadedAt: '2026-01-20T10:00:00Z',
-    signed: true,
-    signedAt: '2026-01-20T10:15:00Z',
-  },
-  {
-    id: 'doc-004',
-    workerId: 'w-102',
-    organizationId: ORG_ID,
-    title: 'Nómina Oficial - Octubre 2026',
-    type: 'payroll',
-    period: 'Octubre 2026',
-    fileUrl: '/docs/nomina-antonio-octubre-2026.pdf',
-    fileSize: 145100,
-    uploadedAt: '2026-10-28T10:00:00Z',
-    signed: false,
-  },
-  {
-    id: 'doc-005',
-    workerId: 'w-103',
-    organizationId: ORG_ID,
-    title: 'Contrato de Trabajo Indefinido',
-    type: 'contract',
-    period: '2026',
-    fileUrl: '/docs/contrato-javier.pdf',
-    fileSize: 480200,
-    uploadedAt: '2026-10-25T10:00:00Z',
-    signed: false,
-  },
-];
-
-// Invitations store (key: SHA-256 hash of high-entropy token)
-export const workerInvitationsMap = new Map<string, WorkerInvitation>();
-
-// Audit logs
-export const auditLogsDb: AuditLog[] = [
-  {
-    id: 'log-001',
-    organizationId: ORG_ID,
-    actorUid: 'supervisor-david',
-    actorRole: 'supervisor',
-    action: 'SYSTEM_BOOTSTRAP',
-    details: { message: 'Inicialización de control horario y portal de trabajadores' },
-    timestamp: '2026-10-31T06:00:00Z',
-  },
-];
-
-// Helper: Hash SHA-256
 export function hashToken(plainToken: string): string {
   return crypto.createHash('sha256').update(plainToken).digest('hex');
 }
@@ -281,11 +34,11 @@ export function recordAuditLog(
     actorRole,
     action,
     targetWorkerId,
-    details,
+    details: publicData(details) as Record<string, any>,
     timestamp: new Date().toISOString(),
   };
   auditLogsDb.unshift(log);
-  if (auditLogsDb.length > 500) auditLogsDb.pop();
+  // Audit entries are append-only; retention requires a separate explicit policy.
 }
 
 /**
@@ -314,7 +67,8 @@ export async function handleCreateInvitation(req: Request, res: Response) {
     // Determine host URL
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
-    const origin = `${protocol}://${host}`;
+    const origin = process.env.PUBLIC_APP_URL;
+    if (!origin || !/^https:\/\//.test(origin)) return res.status(503).json({ error: 'URL pública no configurada' });
     const activationUrl = `${origin}/#activar?token=${plainToken}`;
 
     // Generate high-resolution QR Code
@@ -339,7 +93,7 @@ export async function handleCreateInvitation(req: Request, res: Response) {
       expiresAt,
       consumed: false,
       revoked: false,
-      createdByUid: 'supervisor-david',
+      createdByUid: state().actorUid || 'system',
       createdAt: new Date().toISOString(),
     };
 
@@ -351,7 +105,7 @@ export async function handleCreateInvitation(req: Request, res: Response) {
     worker.updatedAt = new Date().toISOString();
 
     recordAuditLog(
-      'supervisor-david',
+      state().actorUid || 'system',
       'supervisor',
       'INVITATION_CREATED',
       {
@@ -440,6 +194,7 @@ export async function handleActivateWorker(req: Request, res: Response) {
       return res.status(400).json({ error: 'Falta el token de activación' });
     }
 
+    if (!/^\d{4,6}$/.test(String(pin || ''))) return res.status(400).json({ error: 'El PIN debe tener entre 4 y 6 dígitos' });
     const tokenHash = hashToken(token);
     const invitation = workerInvitationsMap.get(tokenHash);
 
@@ -473,7 +228,8 @@ export async function handleActivateWorker(req: Request, res: Response) {
     // Update worker profile
     worker.status = 'active';
     worker.firebaseAuthUid = newUid;
-    if (pin) worker.pin = String(pin).trim();
+    worker.pinHash = hashPin(String(pin).trim());
+    delete worker.pin;
     if (email) worker.email = String(email).trim().toLowerCase();
     worker.lastLoginAt = new Date().toISOString();
     worker.updatedAt = new Date().toISOString();
@@ -500,7 +256,7 @@ export async function handleActivateWorker(req: Request, res: Response) {
         status: worker.status,
         assignedProjectIds: worker.assignedProjectIds,
       },
-      token: `auth-token-${worker.id}-${Date.now()}`,
+      token: issueSession(worker.id),
     });
   } catch (error: any) {
     console.error('Error al activar trabajador:', error);
@@ -539,7 +295,7 @@ export async function handleWorkerLogin(req: Request, res: Response) {
       });
     }
 
-    if (!worker.pin || worker.pin !== cleanPin) {
+    if (!verifyPin(cleanPin, worker.pinHash)) {
       return res.status(401).json({ error: 'PIN de acceso incorrecto' });
     }
 
@@ -557,7 +313,7 @@ export async function handleWorkerLogin(req: Request, res: Response) {
         email: worker.email,
         phone: worker.phone,
       },
-      token: `auth-token-${worker.id}-${Date.now()}`,
+      token: issueSession(worker.id),
     });
   } catch (error: any) {
     console.error('Error en login de trabajador:', error);
@@ -587,7 +343,7 @@ export async function handleRevokeWorker(req: Request, res: Response) {
     }
 
     recordAuditLog(
-      'supervisor-david',
+      state().actorUid || 'system',
       'supervisor',
       'WORKER_REVOKED',
       { workerId: worker.id, reason: reason || 'Revocación por supervisor' },

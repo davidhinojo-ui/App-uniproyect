@@ -229,7 +229,7 @@ export const QuickGuidedActions: React.FC<QuickGuidedActionsProps> = ({
               Auditoría y Pruebas Zero-Trust
             </h3>
             <p className="text-xs text-slate-300 mt-2 leading-relaxed">
-              12 de 12 pruebas superadas. Cero filtraciones entre trabajadores y trazabilidad inmutable.
+              Consultar los controles de acceso y el registro de auditoría.
             </p>
           </div>
 
