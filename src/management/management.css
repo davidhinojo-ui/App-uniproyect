@@ -1,0 +1,741 @@
+@theme {
+  --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: "Space Grotesk", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+  
+  --shadow-premium: 0 10px 30px -10px rgba(0, 0, 0, 0.7), 0 1px 3px rgba(255, 255, 255, 0.03);
+  --shadow-premium-light: 0 10px 30px -10px rgba(15, 23, 42, 0.08), 0 1px 3px rgba(0, 0, 0, 0.02);
+}
+
+/* Base body styling with clean Inter typography */
+.up-management {
+  font-family: var(--font-sans);
+  background-color: #09090B; /* Deep elegant dark zinc */
+  color: #FAFAFA;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+.up-management {
+  --color-accent: #10B981;
+  --color-accent-hover: #059669;
+  --color-accent-light: rgba(16, 185, 129, 0.08);
+  --color-accent-border: rgba(16, 185, 129, 0.15);
+  --touch-target-min: 44px;
+  --bottom-nav-height: 64px;
+}
+
+/* Institutional Accessible Touch Targets (WCAG 2.2 AA) */
+.up-management .touch-target {
+  min-height: var(--touch-target-min);
+  min-width: var(--touch-target-min);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Fluid responsive scroll helpers */
+.up-management .no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.up-management .no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* =========================================================================
+   1. MODO NOCTURNO (DARK MODE) ENHANCEMENTS & HIGH CONTRAST READABILITY
+   ========================================================================= */
+
+html[data-theme="dark"] .up-management {
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .up-management {
+  background-color: #09090B;
+  color: #FAFAFA;
+}
+
+/* Dark Mode Card Backgrounds & Refined Elevation */
+html[data-theme="dark"] .up-management .bg-\[\#151515\],
+html[data-theme="dark"] .up-management .bg-\[\#1A1A1A\],
+html[data-theme="dark"] .up-management .bg-\[\#1E1E1E\],
+html[data-theme="dark"] .up-management .bg-\[\#131314\],
+html[data-theme="dark"] .up-management .bg-\[\#0F0F12\],
+html[data-theme="dark"] .up-management .bg-\[\#161618\],
+html[data-theme="dark"] .up-management .bg-\[\#18181A\],
+html[data-theme="dark"] .up-management .bg-\[\#18181B\],
+html[data-theme="dark"] .up-management .bg-\[\#1C1C1E\] {
+  background-color: #111114 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+  box-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.7) !important;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+html[data-theme="dark"] .up-management .bg-\[\#151515\]:hover,
+html[data-theme="dark"] .up-management .bg-\[\#1A1A1A\]:hover,
+html[data-theme="dark"] .up-management .bg-\[\#1E1E1E\]:hover,
+html[data-theme="dark"] .up-management .bg-\[\#161618\]:hover {
+  border-color: rgba(16, 185, 129, 0.25) !important;
+  box-shadow: 0 14px 35px -10px rgba(16, 185, 129, 0.07), 0 1px 3px rgba(255, 255, 255, 0.04) !important;
+}
+
+/* Secondary dark panels and sub-bars */
+html[data-theme="dark"] .up-management .bg-\[\#121212\],
+html[data-theme="dark"] .up-management .bg-\[\#121214\],
+html[data-theme="dark"] .up-management .bg-\[\#141416\],
+html[data-theme="dark"] .up-management .bg-\[\#181818\],
+html[data-theme="dark"] .up-management .bg-\[\#1A1A1C\],
+html[data-theme="dark"] .up-management .bg-\[\#202022\],
+html[data-theme="dark"] .up-management .bg-\[\#252528\] {
+  background-color: #16161A !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Boost low-contrast secondary and meta texts in dark mode to guarantee WCAG AA */
+html[data-theme="dark"] .up-management .text-white\/20,
+html[data-theme="dark"] .up-management .text-white\/25,
+html[data-theme="dark"] .up-management .text-white\/30 {
+  color: rgba(255, 255, 255, 0.60) !important;
+}
+
+html[data-theme="dark"] .up-management .text-white\/35,
+html[data-theme="dark"] .up-management .text-white\/40,
+html[data-theme="dark"] .up-management .text-white\/45 {
+  color: rgba(255, 255, 255, 0.72) !important;
+}
+
+html[data-theme="dark"] .up-management .text-white\/50,
+html[data-theme="dark"] .up-management .text-white\/55,
+html[data-theme="dark"] .up-management .text-white\/60 {
+  color: rgba(255, 255, 255, 0.85) !important;
+}
+
+html[data-theme="dark"] .up-management .text-slate-400,
+html[data-theme="dark"] .up-management .text-zinc-400,
+html[data-theme="dark"] .up-management .text-gray-400 {
+  color: #D4D4D8 !important; /* Zinc-300: extremely clear */
+}
+
+html[data-theme="dark"] .up-management .text-slate-500,
+html[data-theme="dark"] .up-management .text-zinc-500,
+html[data-theme="dark"] .up-management .text-gray-500 {
+  color: #A1A1AA !important; /* Zinc-400: readable contrast */
+}
+
+html[data-theme="dark"] .up-management .text-slate-600,
+html[data-theme="dark"] .up-management .text-zinc-600,
+html[data-theme="dark"] .up-management .text-gray-600 {
+  color: #71717A !important;
+}
+
+/* Ensure subtle borders are crisp in dark mode */
+html[data-theme="dark"] .up-management .border-white\/5 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-theme="dark"] .up-management .border-white\/10 {
+  border-color: rgba(255, 255, 255, 0.14) !important;
+}
+html[data-theme="dark"] .up-management .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Modals adaptation in Dark Mode: prevent white flashing modals */
+html[data-theme="dark"] .up-management #doc-modal-body,
+html[data-theme="dark"] .up-management #duplicates-modal-body {
+  background-color: #121215 !important;
+  color: #FAFAFA !important;
+  border-color: rgba(255, 255, 255, 0.12) !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.85) !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-header,
+html[data-theme="dark"] .up-management #duplicates-modal-header,
+html[data-theme="dark"] .up-management #doc-modal-tab-switcher {
+  background-color: #16161A !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-900,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-900,
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-800,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-800 {
+  color: #FAFAFA !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-700,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-700 {
+  color: #E4E4E7 !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-600,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-600,
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-500,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-500,
+html[data-theme="dark"] .up-management #doc-modal-body .text-slate-400,
+html[data-theme="dark"] .up-management #duplicates-modal-body .text-slate-400 {
+  color: #A1A1AA !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body .bg-slate-50,
+html[data-theme="dark"] .up-management #duplicates-modal-body .bg-slate-50,
+html[data-theme="dark"] .up-management #doc-modal-body .bg-slate-100,
+html[data-theme="dark"] .up-management #duplicates-modal-body .bg-slate-100 {
+  background-color: #16161A !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body input,
+html[data-theme="dark"] .up-management #doc-modal-body select,
+html[data-theme="dark"] .up-management #doc-modal-body textarea,
+html[data-theme="dark"] .up-management #duplicates-modal-body input,
+html[data-theme="dark"] .up-management #duplicates-modal-body select {
+  background-color: #18181C !important;
+  color: #FAFAFA !important;
+  border-color: rgba(255, 255, 255, 0.15) !important;
+}
+
+html[data-theme="dark"] .up-management #doc-modal-body input::placeholder,
+html[data-theme="dark"] .up-management #doc-modal-body textarea::placeholder {
+  color: #71717A !important;
+}
+
+/* Duplicate Group Cards in Dark Mode */
+html[data-theme="dark"] .up-management .bg-slate-50.border-slate-200\/60 {
+  background-color: #121215 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-theme="dark"] .up-management .bg-slate-100\/70 {
+  background-color: #16161A !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+html[data-theme="dark"] .up-management .text-slate-800,
+html[data-theme="dark"] .up-management .text-slate-700 {
+  color: #FAFAFA !important;
+}
+
+/* =========================================================================
+   2. MODO DIURNO (LIGHT MODE) SYSTEM-WIDE ARCHITECTURE & READABILITY
+   ========================================================================= */
+
+html[data-theme="light"] .up-management {
+  color-scheme: light;
+}
+
+html[data-theme="light"] .up-management body,
+html[data-theme="light"] .up-management #applet-viewport {
+  background-color: #F8FAFC !important; /* Cool Crisp Slate-50 */
+  color: #0F172A !important; /* Deep Slate-900 */
+}
+
+/* Light Mode Header and Navigation Bars */
+html[data-theme="light"] .up-management header,
+html[data-theme="light"] .up-management #main-branded-header {
+  background-color: #FFFFFF !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+}
+
+html[data-theme="light"] .up-management #navigation-tabs-bar {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
+}
+
+html[data-theme="light"] .up-management #navigation-tabs-bar button:not(.bg-gradient-to-r) {
+  color: #475569 !important; /* Slate-600 */
+  font-weight: 700 !important;
+}
+
+html[data-theme="light"] .up-management #navigation-tabs-bar button:not(.bg-gradient-to-r):hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+}
+
+html[data-theme="light"] .up-management #navigation-tabs-bar button.bg-gradient-to-r {
+  color: #000000 !important;
+  font-weight: 900 !important;
+  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.3) !important;
+}
+
+/* Headings in Light Mode */
+html[data-theme="light"] .up-management h1,
+html[data-theme="light"] .up-management h2,
+html[data-theme="light"] .up-management h3,
+html[data-theme="light"] .up-management h4,
+html[data-theme="light"] .up-management h5,
+html[data-theme="light"] .up-management h6 {
+  color: #0F172A !important;
+}
+
+/* Convert all dark cards and surfaces into pristine white cards with refined borders */
+html[data-theme="light"] .up-management .bg-\[\#09090a\],
+html[data-theme="light"] .up-management .bg-\[\#0A0A0A\],
+html[data-theme="light"] .up-management .bg-\[\#0e0e0e\],
+html[data-theme="light"] .up-management .bg-\[\#0F0F12\],
+html[data-theme="light"] .up-management .bg-\[\#101010\],
+html[data-theme="light"] .up-management .bg-\[\#111112\],
+html[data-theme="light"] .up-management .bg-\[\#121212\],
+html[data-theme="light"] .up-management .bg-\[\#121214\],
+html[data-theme="light"] .up-management .bg-\[\#131314\],
+html[data-theme="light"] .up-management .bg-\[\#141414\],
+html[data-theme="light"] .up-management .bg-\[\#141416\],
+html[data-theme="light"] .up-management .bg-\[\#151515\],
+html[data-theme="light"] .up-management .bg-\[\#151516\],
+html[data-theme="light"] .up-management .bg-\[\#151518\],
+html[data-theme="light"] .up-management .bg-\[\#161618\],
+html[data-theme="light"] .up-management .bg-\[\#181818\],
+html[data-theme="light"] .up-management .bg-\[\#18181A\],
+html[data-theme="light"] .up-management .bg-\[\#18181B\],
+html[data-theme="light"] .up-management .bg-\[\#1A1A1A\],
+html[data-theme="light"] .up-management .bg-\[\#1A1A1C\],
+html[data-theme="light"] .up-management .bg-\[\#1A1A1D\],
+html[data-theme="light"] .up-management .bg-\[\#1A1A1E\],
+html[data-theme="light"] .up-management .bg-\[\#1b1b1b\],
+html[data-theme="light"] .up-management .bg-\[\#1C1C1E\],
+html[data-theme="light"] .up-management .bg-\[\#1E1E1E\],
+html[data-theme="light"] .up-management .bg-\[\#1F1F1F\],
+html[data-theme="light"] .up-management .bg-\[\#1F1F22\],
+html[data-theme="light"] .up-management .bg-\[\#202020\],
+html[data-theme="light"] .up-management .bg-\[\#202022\],
+html[data-theme="light"] .up-management .bg-\[\#252528\],
+html[data-theme="light"] .up-management .bg-slate-900,
+html[data-theme="light"] .up-management .bg-slate-950,
+html[data-theme="light"] .up-management .bg-zinc-900,
+html[data-theme="light"] .up-management .bg-zinc-950,
+html[data-theme="light"] .up-management .bg-neutral-900,
+html[data-theme="light"] .up-management .bg-neutral-950,
+html[data-theme="light"] .up-management .bg-black {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.04), 0 8px 24px -6px rgba(15, 23, 42, 0.05) !important;
+}
+
+/* Card hovers in Light Mode */
+html[data-theme="light"] .up-management .bg-\[\#151515\]:hover,
+html[data-theme="light"] .up-management .bg-\[\#1A1A1A\]:hover,
+html[data-theme="light"] .up-management .bg-\[\#1E1E1E\]:hover,
+html[data-theme="light"] .up-management .bg-\[\#0F0F12\]:hover {
+  border-color: #CBD5E1 !important;
+  box-shadow: 0 4px 20px -4px rgba(15, 23, 42, 0.08) !important;
+}
+
+/* Inner panels, search strips, chips, and sub-blocks in Light Mode */
+html[data-theme="light"] .up-management .bg-white\/5,
+html[data-theme="light"] .up-management .bg-white\/10,
+html[data-theme="light"] .up-management .bg-white\/\[0\.02\],
+html[data-theme="light"] .up-management .bg-white\/\[0\.03\],
+html[data-theme="light"] .up-management .bg-white\/\[0\.04\],
+html[data-theme="light"] .up-management .bg-white\/\[0\.05\],
+html[data-theme="light"] .up-management .bg-white\/\[0\.06\],
+html[data-theme="light"] .up-management .bg-black\/20,
+html[data-theme="light"] .up-management .bg-black\/30,
+html[data-theme="light"] .up-management .bg-black\/40,
+html[data-theme="light"] .up-management .bg-black\/50,
+html[data-theme="light"] .up-management .bg-black\/60 {
+  background-color: #F1F5F9 !important; /* Slate-100 */
+  color: #1E293B !important; /* Slate-800 */
+  border: 1px solid #E2E8F0 !important;
+  box-shadow: none !important;
+}
+
+/* Quick range pills and preset buttons */
+html[data-theme="light"] .up-management button.bg-white\/\[0\.02\],
+html[data-theme="light"] .up-management button.bg-white\/5 {
+  background-color: #FFFFFF !important;
+  color: #334155 !important;
+  border: 1px solid #CBD5E1 !important;
+}
+
+html[data-theme="light"] .up-management button.bg-white\/\[0\.02\]:hover,
+html[data-theme="light"] .up-management button.bg-white\/5:hover {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-color: #94A3B8 !important;
+}
+
+/* Modal dark overlay backdrop in Light Mode */
+html[data-theme="light"] .up-management .fixed.inset-0.bg-black\/70,
+html[data-theme="light"] .up-management .fixed.inset-0.bg-black\/80,
+html[data-theme="light"] .up-management .fixed.inset-0.bg-slate-900\/60,
+html[data-theme="light"] .up-management .fixed.inset-0.bg-slate-950\/98,
+html[data-theme="light"] .up-management #doc-modal-overlay,
+html[data-theme="light"] .up-management #duplicates-modal-overlay {
+  background-color: rgba(15, 23, 42, 0.65) !important;
+  backdrop-filter: blur(4px) !important;
+}
+
+/* High Contrast Text overrides in Light Mode */
+html[data-theme="light"] .up-management .text-white,
+html[data-theme="light"] .up-management .text-white\/95,
+html[data-theme="light"] .up-management .text-white\/90,
+html[data-theme="light"] .up-management .text-white\/85,
+html[data-theme="light"] .up-management .text-white\/80,
+html[data-theme="light"] .up-management .text-slate-50,
+html[data-theme="light"] .up-management .text-slate-100,
+html[data-theme="light"] .up-management .text-zinc-50,
+html[data-theme="light"] .up-management .text-zinc-100 {
+  color: #0F172A !important; /* Deep Slate-900 */
+}
+
+html[data-theme="light"] .up-management .text-white\/75,
+html[data-theme="light"] .up-management .text-white\/70,
+html[data-theme="light"] .up-management .text-white\/65,
+html[data-theme="light"] .up-management .text-white\/60,
+html[data-theme="light"] .up-management .text-slate-200,
+html[data-theme="light"] .up-management .text-slate-300,
+html[data-theme="light"] .up-management .text-zinc-200,
+html[data-theme="light"] .up-management .text-zinc-300 {
+  color: #1E293B !important; /* Slate-800 */
+}
+
+html[data-theme="light"] .up-management .text-white\/55,
+html[data-theme="light"] .up-management .text-white\/50,
+html[data-theme="light"] .up-management .text-white\/45,
+html[data-theme="light"] .up-management .text-white\/40,
+html[data-theme="light"] .up-management .text-slate-400,
+html[data-theme="light"] .up-management .text-slate-500,
+html[data-theme="light"] .up-management .text-zinc-400,
+html[data-theme="light"] .up-management .text-zinc-500,
+html[data-theme="light"] .up-management .text-gray-400,
+html[data-theme="light"] .up-management .text-gray-500 {
+  color: #334155 !important; /* Slate-700 (High clarity, never faint!) */
+}
+
+html[data-theme="light"] .up-management .text-white\/35,
+html[data-theme="light"] .up-management .text-white\/30,
+html[data-theme="light"] .up-management .text-white\/25,
+html[data-theme="light"] .up-management .text-white\/20,
+html[data-theme="light"] .up-management .text-white\/15,
+html[data-theme="light"] .up-management .text-white\/10,
+html[data-theme="light"] .up-management .text-slate-600,
+html[data-theme="light"] .up-management .text-zinc-600,
+html[data-theme="light"] .up-management .text-gray-600 {
+  color: #475569 !important; /* Slate-600 */
+}
+
+/* EXCEPTION: Solid colored buttons MUST preserve high contrast white text */
+html[data-theme="light"] .up-management button.bg-emerald-600,
+html[data-theme="light"] .up-management button.bg-emerald-700,
+html[data-theme="light"] .up-management button.bg-blue-600,
+html[data-theme="light"] .up-management button.bg-red-600,
+html[data-theme="light"] .up-management button.bg-rose-600,
+html[data-theme="light"] .up-management .bg-emerald-600 .text-white,
+html[data-theme="light"] .up-management .bg-emerald-600.text-white,
+html[data-theme="light"] .up-management .bg-blue-600 .text-white,
+html[data-theme="light"] .up-management .bg-blue-600.text-white,
+html[data-theme="light"] .up-management .bg-red-600 .text-white,
+html[data-theme="light"] .up-management .bg-red-600.text-white,
+html[data-theme="light"] .up-management .bg-rose-600 .text-white,
+html[data-theme="light"] .up-management .bg-rose-600.text-white {
+  color: #FFFFFF !important;
+}
+
+/* Light Mode Borders */
+html[data-theme="light"] .up-management .border-white\/5,
+html[data-theme="light"] .up-management .border-white\/10,
+html[data-theme="light"] .up-management .border-white\/15,
+html[data-theme="light"] .up-management .border-white\/20,
+html[data-theme="light"] .up-management .border-white\/30,
+html[data-theme="light"] .up-management .border-slate-800 {
+  border-color: #CBD5E1 !important;
+}
+
+html[data-theme="light"] .up-management .divide-white\/5 > :not([hidden]) ~ :not([hidden]) {
+  border-color: #E2E8F0 !important;
+}
+
+/* ACCENT STATUS COLORS - HIGH CONTRAST IN LIGHT MODE */
+
+/* 1. Emerald / Green (Profit, Invoices, Paid) */
+html[data-theme="light"] .up-management .text-\[\#10B981\],
+html[data-theme="light"] .up-management .text-emerald-400,
+html[data-theme="light"] .up-management .text-emerald-500 {
+  color: #047857 !important; /* Emerald-700: 4.8:1 contrast */
+  font-weight: 700;
+}
+
+html[data-theme="light"] .up-management .bg-\[\#10B981\]\/10,
+html[data-theme="light"] .up-management .bg-\[\#10B981\]\/15,
+html[data-theme="light"] .up-management .bg-\[\#10B981\]\/20,
+html[data-theme="light"] .up-management .bg-emerald-500\/10,
+html[data-theme="light"] .up-management .bg-emerald-500\/15,
+html[data-theme="light"] .up-management .bg-emerald-500\/20 {
+  background-color: #ECFDF5 !important; /* Emerald-50 */
+  color: #065F46 !important; /* Emerald-800 */
+  border: 1px solid #A7F3D0 !important; /* Emerald-200 */
+}
+
+/* 2. Amber / Yellow (Warnings, Delivery Notes / Albaranes, Pending) */
+html[data-theme="light"] .up-management .text-amber-400,
+html[data-theme="light"] .up-management .text-yellow-400,
+html[data-theme="light"] .up-management .text-amber-500 {
+  color: #92400E !important; /* Amber-800: 6.2:1 contrast */
+  font-weight: 700;
+}
+
+html[data-theme="light"] .up-management .bg-amber-500\/10,
+html[data-theme="light"] .up-management .bg-amber-500\/12,
+html[data-theme="light"] .up-management .bg-amber-500\/15,
+html[data-theme="light"] .up-management .bg-amber-500\/20,
+html[data-theme="light"] .up-management .bg-amber-950\/20 {
+  background-color: #FFFBEB !important; /* Amber-50 */
+  color: #92400E !important; /* Amber-800 */
+  border: 1px solid #FDE68A !important; /* Amber-200 */
+}
+
+/* 3. Red / Rose (Danger, Budget Margin Alert, Delete) */
+html[data-theme="light"] .up-management .text-red-400,
+html[data-theme="light"] .up-management .text-rose-400,
+html[data-theme="light"] .up-management .text-red-500 {
+  color: #991B1B !important; /* Red-800: 6.8:1 contrast */
+  font-weight: 700;
+}
+
+html[data-theme="light"] .up-management .bg-red-500\/10,
+html[data-theme="light"] .up-management .bg-red-500\/15,
+html[data-theme="light"] .up-management .bg-rose-500\/10,
+html[data-theme="light"] .up-management .bg-rose-500\/20,
+html[data-theme="light"] .up-management .bg-red-950\/20 {
+  background-color: #FEF2F2 !important; /* Red-50 */
+  color: #991B1B !important; /* Red-800 */
+  border: 1px solid #FECACA !important; /* Red-200 */
+}
+
+/* 4. Sky / Blue (Sync, Mail, Reports) */
+html[data-theme="light"] .up-management .text-sky-400,
+html[data-theme="light"] .up-management .text-blue-400 {
+  color: #0369A1 !important; /* Sky-700 */
+  font-weight: 700;
+}
+
+html[data-theme="light"] .up-management .bg-sky-500\/10,
+html[data-theme="light"] .up-management .bg-sky-500\/15,
+html[data-theme="light"] .up-management .bg-blue-500\/10 {
+  background-color: #F0F9FF !important; /* Sky-50 */
+  color: #0369A1 !important; /* Sky-700 */
+  border: 1px solid #BAE6FD !important; /* Sky-200 */
+}
+
+/* 5. Violet / Purple */
+html[data-theme="light"] .up-management .text-violet-400,
+html[data-theme="light"] .up-management .text-purple-400 {
+  color: #5B21B6 !important; /* Purple-800 */
+  font-weight: 700;
+}
+
+html[data-theme="light"] .up-management .bg-violet-500\/10,
+html[data-theme="light"] .up-management .bg-violet-500\/15 {
+  background-color: #F5F3FF !important; /* Purple-50 */
+  color: #5B21B6 !important;
+  border: 1px solid #DDD6FE !important;
+}
+
+/* Form Controls in Light Mode */
+html[data-theme="light"] .up-management input[type="text"],
+html[data-theme="light"] .up-management input[type="search"],
+html[data-theme="light"] .up-management input[type="date"],
+html[data-theme="light"] .up-management input[type="number"],
+html[data-theme="light"] .up-management input[type="email"],
+html[data-theme="light"] .up-management select,
+html[data-theme="light"] .up-management textarea {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.02) !important;
+}
+
+html[data-theme="light"] .up-management input::placeholder,
+html[data-theme="light"] .up-management textarea::placeholder {
+  color: #64748B !important; /* Slate-500: crisp and readable */
+}
+
+html[data-theme="light"] .up-management input:focus,
+html[data-theme="light"] .up-management select:focus,
+html[data-theme="light"] .up-management textarea:focus {
+  border-color: #059669 !important;
+  box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.15) !important;
+  outline: none !important;
+}
+
+html[data-theme="light"] .up-management option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+}
+
+/* Table styling in Light Mode */
+html[data-theme="light"] .up-management table th,
+html[data-theme="light"] .up-management thead,
+html[data-theme="light"] .up-management thead tr {
+  background-color: #F1F5F9 !important;
+  color: #0F172A !important;
+  border-bottom: 2px solid #CBD5E1 !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme="light"] .up-management table td {
+  color: #1E293B !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+}
+
+html[data-theme="light"] .up-management table tbody tr:hover {
+  background-color: #F8FAFC !important;
+}
+
+html[data-theme="light"] .up-management input[type="checkbox"] {
+  accent-color: #059669 !important;
+}
+
+/* Recharts Charts in Light Mode */
+html[data-theme="light"] .up-management .recharts-text,
+html[data-theme="light"] .up-management .recharts-text tspan {
+  fill: #334155 !important; /* Slate-700: clear axis ticks */
+  font-weight: 600 !important;
+}
+
+html[data-theme="light"] .up-management .recharts-cartesian-axis-line {
+  stroke: #CBD5E1 !important;
+}
+
+html[data-theme="light"] .up-management .recharts-cartesian-grid line {
+  stroke: #E2E8F0 !important;
+}
+
+html[data-theme="light"] .up-management .recharts-legend-item-text {
+  color: #1E293B !important;
+  font-weight: 600 !important;
+}
+
+html[data-theme="light"] .up-management .recharts-default-tooltip,
+html[data-theme="light"] .up-management .recharts-tooltip-wrapper > div {
+  background-color: #FFFFFF !important;
+  border: 1px solid #E2E8F0 !important;
+  color: #0F172A !important;
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.12) !important;
+}
+
+/* Custom scrollbars */
+.up-management ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.up-management ::-webkit-scrollbar-track {
+  background: #09090B;
+}
+.up-management ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 99px;
+  transition: all 0.2s ease-in-out;
+}
+.up-management ::-webkit-scrollbar-thumb:hover {
+  background: #10B981;
+}
+
+html[data-theme="light"] .up-management ::-webkit-scrollbar-track {
+  background: #F8FAFC;
+}
+html[data-theme="light"] .up-management ::-webkit-scrollbar-thumb {
+  background: rgba(15, 23, 42, 0.15);
+}
+html[data-theme="light"] .up-management ::-webkit-scrollbar-thumb:hover {
+  background: #059669;
+}
+
+/* Printable layouts */
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 15mm 15mm 15mm 15mm;
+  }
+
+  .up-management {
+    background: #ffffff !important;
+    color: #000000 !important;
+    font-size: 10pt !important;
+    line-height: 1.4 !important;
+    font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif !important;
+  }
+  
+  .up-management body > * {
+    visibility: hidden !important;
+  }
+
+  .up-management #preview-sheet-paper, 
+  .up-management #preview-sheet-paper *, 
+  .up-management #printable-report-card, 
+  .up-management #printable-report-card * {
+    visibility: visible !important;
+  }
+
+  .up-management #preview-sheet-paper,
+  .up-management #printable-report-card {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+    background: #ffffff !important;
+    color: #000000 !important;
+    visibility: visible !important;
+    display: block !important;
+  }
+
+  .up-management .no-print {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .up-management * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    border-color: #CBD5E1 !important;
+  }
+
+  .up-management table {
+    width: 100% !important;
+    border-collapse: collapse !important;
+    page-break-inside: auto !important;
+  }
+
+  .up-management tr {
+    page-break-inside: avoid !important;
+    page-break-after: auto !important;
+  }
+
+  .up-management thead {
+    display: table-header-group !important;
+  }
+
+  .up-management tfoot {
+    display: table-footer-group !important;
+  }
+
+  .up-management .page-break-inside-avoid {
+    page-break-inside: avoid !important;
+  }
+
+  .up-management h1, .up-management h2, .up-management h3, .up-management h4, .up-management h5, .up-management h6 {
+    color: #000000 !important;
+    page-break-after: avoid !important;
+    font-weight: 800 !important;
+  }
+
+  .up-management td, .up-management th {
+    color: #1e293b !important;
+    font-size: 8.5pt !important;
+    padding-top: 6px !important;
+    padding-bottom: 6px !important;
+  }
+
+  .up-management .text-emerald-500, .up-management .text-emerald-600, .up-management .text-[#10B981] {
+    color: #047857 !important;
+  }
+}
