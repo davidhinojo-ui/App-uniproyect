@@ -331,3 +331,42 @@ body:has(.up-worker-nav) .uniproyect-theme-switch {
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
 }
+
+/* Theme variants must override Tailwind hover utilities as well as resting surfaces. */
+@media screen {
+  html[data-theme="light"] :is(.hover\:bg-slate-800, .hover\:bg-slate-800\/60, .hover\:bg-slate-800\/50,
+    .hover\:bg-slate-700, .hover\:bg-slate-700\/30, .hover\:bg-slate-600):hover {
+    background-color: #e2e8f0 !important;
+  }
+  html[data-theme="light"] .hover\:text-white:hover { color: #0f172a !important; }
+  html[data-theme="light"] :is(.text-emerald-400\/90, .text-emerald-500\/80) { color: #065f46 !important; }
+  html[data-theme="light"] .text-amber-500\/80 { color: #92400e !important; }
+  html[data-theme="light"] .text-slate-600 { color: #475569 !important; }
+  html:not([data-theme="light"]) .text-slate-600 { color: #b8c5d8; }
+  input::placeholder, textarea::placeholder { opacity: 1; }
+  html:not([data-theme="light"]) :is(input, textarea)::placeholder { color: #b8c5d8; }
+  html[data-theme="light"] ::-webkit-scrollbar-track { background: #f1f5f9; }
+  html[data-theme="light"] ::-webkit-scrollbar-thumb { background: #64748b; }
+}
+@media screen { html[data-theme="light"] .hover\:text-blue-300:hover { color: #1d4ed8 !important; } }
+@media screen { html[data-theme="light"] .hover\:text-emerald-300:hover { color: #065f46 !important; } }
+@media screen { html[data-theme="light"] .hover\:text-amber-300:hover { color: #92400e !important; } }
+@media screen { html[data-theme="light"] .hover\:text-rose-300:hover { color: #be123c !important; } }
+@media screen { html[data-theme="light"] .hover\:text-purple-300:hover { color: #6b21a8 !important; } }
+@media screen { html[data-theme="light"] .hover\:text-sky-300:hover { color: #075985 !important; } }
+@media screen {
+  html[data-theme] :is(button, a).hover\:bg-blue-500:hover { background-color: var(--up-action-blue); color: #ffffff !important; }
+  html[data-theme] :is(button, a).hover\:bg-blue-500:hover :is(span, svg) { color: #ffffff !important; }
+}
+@media screen {
+  html[data-theme] :is(button, a).hover\:bg-emerald-500:hover { background-color: var(--up-action-emerald); color: #ffffff !important; }
+  html[data-theme] :is(button, a).hover\:bg-emerald-500:hover :is(span, svg) { color: #ffffff !important; }
+}
+@media screen {
+  html[data-theme] :is(button, a).hover\:bg-amber-500:hover { background-color: var(--up-action-amber); color: #ffffff !important; }
+  html[data-theme] :is(button, a).hover\:bg-amber-500:hover :is(span, svg) { color: #ffffff !important; }
+}
+@media screen {
+  html[data-theme] :is(button, a).hover\:bg-rose-500:hover { background-color: var(--up-action-rose); color: #ffffff !important; }
+  html[data-theme] :is(button, a).hover\:bg-rose-500:hover :is(span, svg) { color: #ffffff !important; }
+}
