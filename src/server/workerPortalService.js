@@ -3,50 +3,7 @@ import crypto from "crypto";
 import QRCode from "qrcode";
 const ORG_ID = "org-jose-real";
 const ORG_NAME = "Jos\xE9 Real Construcciones, S.L.";
-export const projectsDb = [
-  {
-    id: "proj-001",
-    organizationId: ORG_ID,
-    code: "OBRA-2026-01",
-    name: "Residencial Las Palmas - Fase II",
-    address: "Calle Mayor 45, Las Palmas",
-    client: "Promociones Atl\xE1ntico S.A.",
-    status: "active",
-    supervisorName: "David Hinojo (Supervisor General)",
-    budget: 35e4,
-    laborCostTotal: 14250,
-    materialCostTotal: 84300,
-    createdAt: "2026-01-15T08:00:00Z"
-  },
-  {
-    id: "proj-002",
-    organizationId: ORG_ID,
-    code: "OBRA-2026-02",
-    name: "Rehabilitaci\xF3n Integral Casco Hist\xF3rico",
-    address: "Plaza del Rey 12, Centro",
-    client: "Consorcio Patrimonio Hist\xF3rico",
-    status: "active",
-    supervisorName: "Carlos M. Encargado",
-    budget: 18e4,
-    laborCostTotal: 8640.5,
-    materialCostTotal: 42100,
-    createdAt: "2026-02-01T08:00:00Z"
-  },
-  {
-    id: "proj-003",
-    organizationId: ORG_ID,
-    code: "OBRA-2026-03",
-    name: "Nave Log\xEDstica Pol\xEDgono Oeste",
-    address: "Parque Industrial Sur, Parcela 8B",
-    client: "Log\xEDstica Global Express",
-    status: "active",
-    supervisorName: "David Hinojo (Supervisor General)",
-    budget: 52e4,
-    laborCostTotal: 19800,
-    materialCostTotal: 125400,
-    createdAt: "2026-03-10T08:00:00Z"
-  }
-];
+export const projectsDb = [];
 export const workersDb = [
   {
     id: "w-101",
@@ -55,7 +12,7 @@ export const workersDb = [
     dniNie: "48392019K",
     category: "Oficial 1\xAA Alba\xF1il",
     hourlyRate: 19.5,
-    assignedProjectIds: ["proj-001", "proj-002"],
+    assignedProjectIds: [],
     status: "active",
     firebaseAuthUid: "uid-w-101",
     email: "m.garcia@construccionesreal.es",
@@ -73,7 +30,7 @@ export const workersDb = [
     dniNie: "31940283T",
     category: "Pe\xF3n Especialista",
     hourlyRate: 16,
-    assignedProjectIds: ["proj-001", "proj-003"],
+    assignedProjectIds: [],
     status: "active",
     firebaseAuthUid: "uid-w-102",
     email: "a.romero@construccionesreal.es",
@@ -91,7 +48,7 @@ export const workersDb = [
     dniNie: "52849102L",
     category: "Oficial 1\xAA Encofrador",
     hourlyRate: 21,
-    assignedProjectIds: ["proj-001", "proj-003"],
+    assignedProjectIds: [],
     status: "pending",
     // Pending QR activation
     firebaseAuthUid: null,
@@ -109,7 +66,7 @@ export const workersDb = [
     dniNie: "77291048M",
     category: "Oficial Electricista",
     hourlyRate: 22.5,
-    assignedProjectIds: ["proj-002"],
+    assignedProjectIds: [],
     status: "suspended",
     firebaseAuthUid: "uid-w-104",
     email: "p.sanchez@construccionesreal.es",
@@ -120,56 +77,7 @@ export const workersDb = [
     updatedAt: "2026-10-20T11:00:00Z"
   }
 ];
-export const timeRecordsDb = [
-  {
-    id: "tr-001",
-    workerId: "w-101",
-    workerName: "Manuel Garc\xEDa Rodr\xEDguez",
-    firebaseAuthUid: "uid-w-101",
-    organizationId: ORG_ID,
-    projectId: "proj-001",
-    projectName: "Residencial Las Palmas - Fase II",
-    type: "check_in",
-    timestamp: "2026-10-31T07:58:12Z",
-    location: { latitude: 28.1235, longitude: -15.4362, address: "Acceso Puerta 1 - Obra Las Palmas" },
-    notes: "Jornada normal de hormigonado y tabiquer\xEDa",
-    status: "valid",
-    createdAt: "2026-10-31T07:58:12Z"
-  },
-  {
-    id: "tr-002",
-    workerId: "w-102",
-    workerName: "Antonio Romero Ben\xEDtez",
-    firebaseAuthUid: "uid-w-102",
-    organizationId: ORG_ID,
-    projectId: "proj-001",
-    projectName: "Residencial Las Palmas - Fase II",
-    type: "check_in",
-    timestamp: "2026-10-30T07:55:00Z",
-    location: { latitude: 28.1234, longitude: -15.436 },
-    notes: "Entrada puntual",
-    status: "valid",
-    createdAt: "2026-10-30T07:55:00Z"
-  },
-  {
-    id: "tr-003",
-    workerId: "w-102",
-    workerName: "Antonio Romero Ben\xEDtez",
-    firebaseAuthUid: "uid-w-102",
-    organizationId: ORG_ID,
-    projectId: "proj-001",
-    projectName: "Residencial Las Palmas - Fase II",
-    type: "check_out",
-    timestamp: "2026-10-30T16:25:00Z",
-    location: { latitude: 28.1236, longitude: -15.4363 },
-    hoursWorked: 8.5,
-    hourlyRate: 16,
-    calculatedCost: 136,
-    notes: "Salida de fin de jornada completa",
-    status: "valid",
-    createdAt: "2026-10-30T16:25:00Z"
-  }
-];
+export const timeRecordsDb = [];
 export const workerDocumentsDb = [
   {
     id: "doc-001",

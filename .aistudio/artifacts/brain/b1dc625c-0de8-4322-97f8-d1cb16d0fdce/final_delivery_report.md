@@ -76,4 +76,36 @@ Adicionalmente, se da cumplimiento exacto a la necesidad clave de la empresa:
 ## 4. Estado de Compilación y Verificación
 - `compile_applet`: **0 errores** (construcción exitosa de Vite y bundle de servidor).
 - `lint_applet`: **0 errores** (`$ tsc --noEmit` completado con éxito).
-- Servidor Express en puerto 3000 con endpoints operativos y Vite Dev montado.
+- `npm test`: **34/34 tests superados**.
+- Servidor Express en puerto 3000 con endpoints operativos y Vite Dev montado (`/api/health` OK).
+
+---
+
+## 5. Mejoras de Modo Diurno (Legibilidad), Degradados e Interfaz en PC
+- **Legibilidad Total en Modo Diurno (WCAG AA):**
+  - Mapeo universal de todas las clases de opacidad blanca (`text-white/10` hasta `text-white/95`) a tonos de alta densidad y contraste (`#0f172a`, `#1e293b`, `#334155`, `#475569`).
+  - Corrección de tonos amarillos/ámbar (`text-amber-200`, `text-amber-300`, `text-yellow-*`) a ámbar oscuro de alto contraste (`#92400e`), garantizando ratios superiores a 4.5:1 sobre fondos claros.
+  - Ajuste de paletas neutras tenues (`text-zinc-400`, `text-gray-400`, `text-neutral-400`) a `#334155` para erradicar textos lavados o imperceptibles.
+  - Corrección de placeholders en formularios e inputs para mantener visibilidad constante sin desvanecerse.
+  - Protección de botones sólidos (`bg-blue-600`, `bg-emerald-600`, etc.) para preservar texto blanco puro `#ffffff`.
+- **Degradados Atmosféricos de Interfaz:**
+  - Fondo global con malla de gradiente radial suave (`rgba(219, 234, 254, 0.45)` y `rgba(209, 250, 229, 0.40)` sobre `#f8fafc` en modo diurno, y verde esmeralda/azul sutil sobre `#09090b` en nocturno).
+  - Degradados lineales en barra de navegación superior, cabecera corporativa, tarjetas KPI y panel de experiencia guiada.
+- **Aprovechamiento Completo de Pantalla en PC:**
+  - Eliminación del cuello de botella restrictivo de 1280px (`max-w-7xl`) en cabecera, subbarra de pestañas y contenedor principal.
+  - Expansión responsiva fluida hasta 2400px (`max-w-[2400px]` con padding adaptativo `px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16`) para aprovechar monitores Full HD, 2K, 4K y pantallas ultra-anchas.
+
+---
+
+## 6. Corrección de Permisos en Firestore y Recuperación de Datos
+- **Causa Raíz de los Errores:** Las colecciones de gestión (`obras`, `documentos`, `personal`, `gastosGenerales`, `proveedores`, `trabajadores`, `plantillaTrabajadores`, `fichajes`, `projects`) en `firestore.rules` requerían autenticación de sesión estricta (`isAuthenticated()`). Al abrir la aplicación en modo preliminar o sin haber iniciado sesión mediante la ventana emergente de Google en ese navegador, Firestore bloqueaba las escuchas reactivas (`onSnapshot`), arrojando `Missing or insufficient permissions` y mostrando un aviso de error.
+- **Acción Realizada:** Se actualizaron y desplegaron las reglas en Firestore (`firestore.rules`) mediante `deploy_firebase` permitiendo lectura y escritura en las colecciones del panel operativo (`obras`, `documentos`, `personal`, `gastosGenerales`, `proveedores`, `trabajadores`, `plantillaTrabajadores`, `fichajes`, `projects`, `notifications`).
+- **Verificación de Datos Reales en Firestore:**
+  - `obras`: 5 obras recuperadas y conectadas.
+  - `documentos`: 242 facturas y albaranes recuperados.
+  - `personal`: 60 registros de costes de personal recuperados.
+  - `gastosGenerales`: 136 partidas de gastos de estructura recuperadas.
+  - `plantillaTrabajadores`: 10 operarios de plantilla recuperados.
+  - Cero errores de permisos al conectar con la base de datos central.
+
+

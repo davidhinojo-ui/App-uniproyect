@@ -1,249 +1,294 @@
 import crypto from 'crypto';
 import QRCode from 'qrcode';
 import { Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
+import { initializeApp, getApps, getApp } from 'firebase/app';
+import { getFirestore, collection, getDocs, doc, setDoc } from 'firebase/firestore';
 import { Worker, WorkerInvitation, TimeRecord, WorkerDocument, Project, AuditLog } from '../types/index.js';
 
 const ORG_ID = 'org-jose-real';
 const ORG_NAME = 'José Real Construcciones, S.L.';
 
-// Initial projects with current labor and material costs
+// Initialize server-side Firestore instance with provisioned database
+export let firestoreDb: any = null;
+try {
+  const configPath = path.resolve(process.cwd(), 'firebase-applet-config.json');
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    const app = getApps().length === 0 ? initializeApp(config) : getApp();
+    firestoreDb = getFirestore(app, config.firestoreDatabaseId);
+    console.log('[WorkerPortalService] Firestore inicializado con base de datos:', config.firestoreDatabaseId);
+  }
+} catch (e) {
+  console.warn('[WorkerPortalService] Inicialización de Firestore omitida o fallida:', e);
+}
+
+// Initial registered projects: strictly registered obras from Firestore
 export const projectsDb: Project[] = [
   {
-    id: 'proj-001',
+    id: 'obra-1788795466519',
     organizationId: ORG_ID,
-    code: 'OBRA-2026-01',
-    name: 'Residencial Las Palmas - Fase II',
-    address: 'Calle Mayor 45, Las Palmas',
-    client: 'Promociones Atlántico S.A.',
+    code: 'OBRA-REHAB',
+    name: 'REHABILITACION CIBIERTA EDIF. RESIDENCIAL',
+    address: 'Arcos de la Frontera',
+    client: 'Comunidad de Propietarios',
     status: 'active',
     supervisorName: 'David Hinojo (Supervisor General)',
-    budget: 350000,
-    laborCostTotal: 14250.00,
-    materialCostTotal: 84300.00,
-    createdAt: '2026-01-15T08:00:00Z',
+    budget: 45000,
+    laborCostTotal: 0,
+    createdAt: '2026-09-01T08:00:00Z',
   },
   {
-    id: 'proj-002',
+    id: 'obra-1788795466897',
     organizationId: ORG_ID,
-    code: 'OBRA-2026-02',
-    name: 'Rehabilitación Integral Casco Histórico',
-    address: 'Plaza del Rey 12, Centro',
-    client: 'Consorcio Patrimonio Histórico',
-    status: 'active',
-    supervisorName: 'Carlos M. Encargado',
-    budget: 180000,
-    laborCostTotal: 8640.50,
-    materialCostTotal: 42100.00,
-    createdAt: '2026-02-01T08:00:00Z',
-  },
-  {
-    id: 'proj-003',
-    organizationId: ORG_ID,
-    code: 'OBRA-2026-03',
-    name: 'Nave Logística Polígono Oeste',
-    address: 'Parque Industrial Sur, Parcela 8B',
-    client: 'Logística Global Express',
+    code: '100626',
+    name: '100626_Obra Tomás García Figueras',
+    address: 'Jerez de la Frontera',
+    client: 'Tomás García Figueras',
     status: 'active',
     supervisorName: 'David Hinojo (Supervisor General)',
-    budget: 520000,
-    laborCostTotal: 19800.00,
-    materialCostTotal: 125400.00,
-    createdAt: '2026-03-10T08:00:00Z',
+    budget: 85000,
+    laborCostTotal: 0,
+    createdAt: '2026-09-15T08:00:00Z',
+  },
+  {
+    id: 'obra-1788795467133',
+    organizationId: ORG_ID,
+    code: 'OBRA-ESPERA',
+    name: 'REFORMA ESPERA',
+    address: 'Espera (Cádiz)',
+    client: 'Reforma Integral Vivienda',
+    status: 'active',
+    supervisorName: 'David Hinojo (Supervisor General)',
+    budget: 32000,
+    laborCostTotal: 0,
+    createdAt: '2026-09-20T08:00:00Z',
+  },
+  {
+    id: 'obra-1792510754303',
+    organizationId: ORG_ID,
+    code: 'OBRA-AGUAS',
+    name: 'PLAZA DE LAS AGUAS',
+    address: 'Arcos de la Frontera',
+    client: 'Ayuntamiento de Arcos',
+    status: 'active',
+    supervisorName: 'David Hinojo (Supervisor General)',
+    budget: 120000,
+    laborCostTotal: 0,
+    createdAt: '2026-10-01T08:00:00Z',
+  },
+  {
+    id: 'obra-1793129569377',
+    organizationId: ORG_ID,
+    code: 'OBRA-PERRO',
+    name: 'CUESTA EL PERRO',
+    address: 'Arcos de la Frontera',
+    client: 'Pavimentación y Accesos',
+    status: 'active',
+    supervisorName: 'David Hinojo (Supervisor General)',
+    budget: 64000,
+    laborCostTotal: 0,
+    createdAt: '2026-10-10T08:00:00Z',
   },
 ];
 
-// Initial workers database with initial authorized obras and hourly rates
+// Real registered workers from Firestore collection plantillaTrabajadores
 export const workersDb: Worker[] = [
   {
-    id: 'w-101',
+    id: 'trab-emp-1788362023057',
     organizationId: ORG_ID,
-    fullName: 'Manuel García Rodríguez',
-    dniNie: '48392019K',
-    category: 'Oficial 1ª Albañil',
-    hourlyRate: 19.50,
-    assignedProjectIds: ['proj-001', 'proj-002'],
+    fullName: 'JOSE MANUEL ORDOÑEZ RONDÁN',
+    dniNie: '44052426C',
+    category: 'Encargado de Obra',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
-    firebaseAuthUid: 'uid-w-101',
-    email: 'm.garcia@construccionesreal.es',
-    phone: '+34 611 223 344',
-    pin: '1234',
+    phone: '653284276',
     activationCount: 1,
-    lastLoginAt: '2026-10-31T08:15:00Z',
-    createdAt: '2026-01-20T08:00:00Z',
+    createdAt: '2026-09-01T08:00:00Z',
     updatedAt: '2026-10-31T08:00:00Z',
   },
   {
-    id: 'w-102',
+    id: 'trab-emp-1788447093726',
     organizationId: ORG_ID,
-    fullName: 'Antonio Romero Benítez',
-    dniNie: '31940283T',
-    category: 'Peón Especialista',
-    hourlyRate: 16.00,
-    assignedProjectIds: ['proj-001', 'proj-003'],
+    fullName: 'JUAN PABLO MANCHEÑO PERDIGONES',
+    dniNie: '31714722E',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
-    firebaseAuthUid: 'uid-w-102',
-    email: 'a.romero@construccionesreal.es',
-    phone: '+34 622 334 455',
-    pin: '4321',
     activationCount: 1,
-    lastLoginAt: '2026-10-30T17:40:00Z',
-    createdAt: '2026-02-10T08:00:00Z',
-    updatedAt: '2026-10-30T17:40:00Z',
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
   },
   {
-    id: 'w-103',
+    id: 'trab-emp-1788447139258',
     organizationId: ORG_ID,
-    fullName: 'Javier Martínez Delgado',
-    dniNie: '52849102L',
-    category: 'Oficial 1ª Encofrador',
-    hourlyRate: 21.00,
-    assignedProjectIds: ['proj-001', 'proj-003'],
-    status: 'pending', // Pending QR activation
-    firebaseAuthUid: null,
-    email: 'j.martinez@construccionesreal.es',
-    phone: '+34 633 445 566',
-    pin: undefined,
-    activationCount: 0,
-    createdAt: '2026-10-25T09:30:00Z',
-    updatedAt: '2026-10-25T09:30:00Z',
+    fullName: 'ALFONSO LUIS FLORES MACIAS',
+    dniNie: '75776604E',
+    category: 'Peón Especialista',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
   },
   {
-    id: 'w-104',
+    id: 'trab-emp-1788447322110',
     organizationId: ORG_ID,
-    fullName: 'Pedro Sánchez Morales',
-    dniNie: '77291048M',
-    category: 'Oficial Electricista',
-    hourlyRate: 22.50,
-    assignedProjectIds: ['proj-002'],
-    status: 'suspended',
-    firebaseAuthUid: 'uid-w-104',
-    email: 'p.sanchez@construccionesreal.es',
-    phone: '+34 644 556 677',
-    pin: '5678',
+    fullName: 'RAFAEL JIMENEZ GALINDO',
+    dniNie: '53154499G',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
     activationCount: 1,
-    createdAt: '2026-03-01T08:00:00Z',
-    updatedAt: '2026-10-20T11:00:00Z',
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1788448423610',
+    organizationId: ORG_ID,
+    fullName: 'ANDRÉS MANCHEÑO LOPEZ',
+    dniNie: '',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1788448552984',
+    organizationId: ORG_ID,
+    fullName: 'DAVID BAREA FERNANDEZ',
+    dniNie: '',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1788448806082',
+    organizationId: ORG_ID,
+    fullName: 'ABRAHAM MANCHEÑO LOPEZ',
+    dniNie: '32057606E',
+    category: 'Gruista',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1791209906770',
+    organizationId: ORG_ID,
+    fullName: 'Jesús Collantes',
+    dniNie: '',
+    category: 'Peón Ordinario',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1791210035818',
+    organizationId: ORG_ID,
+    fullName: 'MARCOS JESUS COLLANTES GUERRERO',
+    dniNie: '31737970V',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
+  },
+  {
+    id: 'trab-emp-1791297516908',
+    organizationId: ORG_ID,
+    fullName: 'JORGE NAVES',
+    dniNie: '74927270D',
+    category: 'Oficial de 1ª Albañil',
+    hourlyRate: 14.00,
+    assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
+    status: 'active',
+    activationCount: 1,
+    createdAt: '2026-09-01T08:00:00Z',
+    updatedAt: '2026-10-31T08:00:00Z',
   },
 ];
 
-// Initial time records
-export const timeRecordsDb: TimeRecord[] = [
-  {
-    id: 'tr-001',
-    workerId: 'w-101',
-    workerName: 'Manuel García Rodríguez',
-    firebaseAuthUid: 'uid-w-101',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_in',
-    timestamp: '2026-10-31T07:58:12Z',
-    location: { latitude: 28.1235, longitude: -15.4362, address: 'Acceso Puerta 1 - Obra Las Palmas' },
-    notes: 'Jornada normal de hormigonado y tabiquería',
-    status: 'valid',
-    createdAt: '2026-10-31T07:58:12Z',
-  },
-  {
-    id: 'tr-002',
-    workerId: 'w-102',
-    workerName: 'Antonio Romero Benítez',
-    firebaseAuthUid: 'uid-w-102',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_in',
-    timestamp: '2026-10-30T07:55:00Z',
-    location: { latitude: 28.1234, longitude: -15.4360 },
-    notes: 'Entrada puntual',
-    status: 'valid',
-    createdAt: '2026-10-30T07:55:00Z',
-  },
-  {
-    id: 'tr-003',
-    workerId: 'w-102',
-    workerName: 'Antonio Romero Benítez',
-    firebaseAuthUid: 'uid-w-102',
-    organizationId: ORG_ID,
-    projectId: 'proj-001',
-    projectName: 'Residencial Las Palmas - Fase II',
-    type: 'check_out',
-    timestamp: '2026-10-30T16:25:00Z',
-    location: { latitude: 28.1236, longitude: -15.4363 },
-    hoursWorked: 8.5,
-    hourlyRate: 16.00,
-    calculatedCost: 136.00,
-    notes: 'Salida de fin de jornada completa',
-    status: 'valid',
-    createdAt: '2026-10-30T16:25:00Z',
-  },
-];
+// Synchronize memory cache with authoritative Firestore collections
+export async function syncFromFirestore(): Promise<void> {
+  if (!firestoreDb) return;
+  try {
+    const [workersSnap, obrasSnap] = await Promise.all([
+      getDocs(collection(firestoreDb, 'plantillaTrabajadores')),
+      getDocs(collection(firestoreDb, 'obras'))
+    ]);
 
-// Initial worker documents
-export const workerDocumentsDb: WorkerDocument[] = [
-  {
-    id: 'doc-001',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Nómina Oficial - Octubre 2026',
-    type: 'payroll',
-    period: 'Octubre 2026',
-    fileUrl: '/docs/nomina-manuel-octubre-2026.pdf',
-    fileSize: 148200,
-    uploadedAt: '2026-10-28T10:00:00Z',
-    signed: true,
-    signedAt: '2026-10-29T12:30:00Z',
-  },
-  {
-    id: 'doc-002',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Certificado Reconocimiento Médico 2026',
-    type: 'medical',
-    period: 'Año 2026',
-    fileUrl: '/docs/medico-manuel-2026.pdf',
-    fileSize: 220500,
-    uploadedAt: '2026-02-14T09:00:00Z',
-    signed: true,
-    signedAt: '2026-02-14T11:00:00Z',
-  },
-  {
-    id: 'doc-003',
-    workerId: 'w-101',
-    organizationId: ORG_ID,
-    title: 'Certificado Curso PRL 20 Horas Albañilería',
-    type: 'safety_prl',
-    period: 'Vigente',
-    fileUrl: '/docs/prl-20h-manuel.pdf',
-    fileSize: 310400,
-    uploadedAt: '2026-01-20T10:00:00Z',
-    signed: true,
-    signedAt: '2026-01-20T10:15:00Z',
-  },
-  {
-    id: 'doc-004',
-    workerId: 'w-102',
-    organizationId: ORG_ID,
-    title: 'Nómina Oficial - Octubre 2026',
-    type: 'payroll',
-    period: 'Octubre 2026',
-    fileUrl: '/docs/nomina-antonio-octubre-2026.pdf',
-    fileSize: 145100,
-    uploadedAt: '2026-10-28T10:00:00Z',
-    signed: false,
-  },
-  {
-    id: 'doc-005',
-    workerId: 'w-103',
-    organizationId: ORG_ID,
-    title: 'Contrato de Trabajo Indefinido',
-    type: 'contract',
-    period: '2026',
-    fileUrl: '/docs/contrato-javier.pdf',
-    fileSize: 480200,
-    uploadedAt: '2026-10-25T10:00:00Z',
-    signed: false,
-  },
-];
+    if (!obrasSnap.empty) {
+      projectsDb.length = 0;
+      obrasSnap.forEach((d) => {
+        const data = d.data();
+        projectsDb.push({
+          id: d.id,
+          organizationId: ORG_ID,
+          code: data.code || d.id,
+          name: data.name,
+          address: data.location || '',
+          client: data.description || '',
+          status: data.status === 'on_hold' ? 'paused' : (data.status || 'active'),
+          supervisorName: 'David Hinojo (Supervisor General)',
+          budget: Number(data.budget) || 0,
+          laborCostTotal: 0,
+          createdAt: data.startDate || new Date().toISOString(),
+        });
+      });
+    }
+
+    if (!workersSnap.empty) {
+      workersDb.length = 0;
+      workersSnap.forEach((d) => {
+        const data = d.data();
+        const stdRate = Number(data.standardHourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : 14.0);
+        workersDb.push({
+          id: d.id,
+          organizationId: ORG_ID,
+          fullName: data.name,
+          dniNie: data.dni || '',
+          category: data.role || 'Oficial de Obra',
+          hourlyRate: stdRate,
+          assignedProjectIds: projectsDb.map(p => p.id),
+          status: data.active === false ? 'suspended' : 'active',
+          phone: data.phone || '',
+          activationCount: 1,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        });
+      });
+    }
+    console.log(`[WorkerPortalService] Sincronización exitosa: ${workersDb.length} trabajadores y ${projectsDb.length} obras reales.`);
+  } catch (err) {
+    console.warn('[WorkerPortalService] Fallo al sincronizar desde Firestore:', err);
+  }
+}
+
+// Initial worker documents: strictly authentic, clean state
+export const workerDocumentsDb: WorkerDocument[] = [];
+
+// Time records: strictly recorded work shifts
+export const timeRecordsDb: TimeRecord[] = [];
 
 // Invitations store (key: SHA-256 hash of high-entropy token)
 export const workerInvitationsMap = new Map<string, WorkerInvitation>();
@@ -315,7 +360,8 @@ export async function handleCreateInvitation(req: Request, res: Response) {
     const protocol = req.headers['x-forwarded-proto'] || req.protocol || 'http';
     const host = req.headers['x-forwarded-host'] || req.headers.host || 'localhost:3000';
     const origin = `${protocol}://${host}`;
-    const activationUrl = `${origin}/#activar?token=${plainToken}`;
+    // Direct worker portal URL (no app needed; scanning directly opens the worker's own portal)
+    const activationUrl = `${origin}/#portal?w=${encodeURIComponent(worker.id)}&token=${encodeURIComponent(plainToken)}`;
 
     // Generate high-resolution QR Code
     const qrCodeUrl = await QRCode.toDataURL(activationUrl, {
@@ -566,11 +612,12 @@ export async function handleWorkerLogin(req: Request, res: Response) {
 }
 
 /**
- * SUPERVISOR: Revoke Worker Access or Invitation
+ * SUPERVISOR / GERENTE: Revoke Worker Access or Portal
  */
 export async function handleRevokeWorker(req: Request, res: Response) {
   try {
-    const { workerId, reason } = req.body;
+    const workerId = req.body.workerId || req.params.id;
+    const reason = req.body.reason;
     if (!workerId) return res.status(400).json({ error: 'Falta workerId' });
 
     const worker = workersDb.find((w) => w.id === workerId);
@@ -587,23 +634,160 @@ export async function handleRevokeWorker(req: Request, res: Response) {
     }
 
     recordAuditLog(
-      'supervisor-david',
+      'gerente',
       'supervisor',
-      'WORKER_REVOKED',
-      { workerId: worker.id, reason: reason || 'Revocación por supervisor' },
+      'WORKER_PORTAL_REVOKED',
+      { workerId: worker.id, fullName: worker.fullName, reason: reason || 'Portal eliminado/revocado por el Gerente' },
       worker.id
     );
 
-    return res.json({ success: true, message: 'Acceso revocado de inmediato' });
+    return res.json({ success: true, message: `Portal revocado para ${worker.fullName}` });
   } catch (error: any) {
     console.error('Error al revocar trabajador:', error);
-    return res.status(500).json({ error: 'Error al revocar acceso' });
+    return res.status(500).json({ error: 'Error al revocar portal: ' + error.message });
+  }
+}
+
+/**
+ * SUPERVISOR / GERENTE: Reactivate Worker Portal
+ */
+export async function handleActivateWorkerPortal(req: Request, res: Response) {
+  try {
+    const workerId = req.body.workerId || req.params.id;
+    if (!workerId) return res.status(400).json({ error: 'Falta workerId' });
+
+    const worker = workersDb.find((w) => w.id === workerId);
+    if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
+
+    worker.status = 'active';
+    worker.updatedAt = new Date().toISOString();
+
+    recordAuditLog(
+      'gerente',
+      'supervisor',
+      'WORKER_PORTAL_ACTIVATED',
+      { workerId: worker.id, fullName: worker.fullName },
+      worker.id
+    );
+
+    return res.json({ success: true, message: `Portal reactivado para ${worker.fullName}`, worker });
+  } catch (error: any) {
+    console.error('Error al reactivar portal:', error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+/**
+ * SUPERVISOR / GERENTE: Give Visto Bueno / Approval to Time Record
+ * Automatically imputes calculated labor expense directly to the obra in Firestore 'personal' collection!
+ */
+export async function handleApproveTimeRecord(req: Request, res: Response) {
+  try {
+    const recordId = req.params.id || req.body.recordId;
+    const { managerName, notes, signature } = req.body;
+
+    if (!recordId) return res.status(400).json({ error: 'Falta recordId' });
+
+    const record = timeRecordsDb.find((r) => r.id === recordId);
+    if (!record) return res.status(404).json({ error: 'Fichaje no encontrado' });
+
+    const worker = workersDb.find((w) => w.id === record.workerId);
+    const hourlyRate = record.hourlyRate || worker?.hourlyRate || 14.0;
+    const hours = record.hoursWorked || 8.0;
+    const totalCost = Number((record.calculatedCost || (hours * hourlyRate)).toFixed(2));
+    const nowIso = new Date().toISOString();
+
+    record.status = 'valid';
+    (record as any).approvalStatus = 'approved';
+    (record as any).approvedAt = nowIso;
+    (record as any).managerName = managerName || 'Gerente de Obra';
+    (record as any).managerSignature = signature;
+    (record as any).managerNotes = notes;
+
+    const costId = `cost-fichaje-${record.id}`;
+
+    // DIRECT LABOR COST IMPUTATION TO FIRESTORE 'personal' COLLECTION!
+    if (firestoreDb) {
+      try {
+        const personalDoc = {
+          id: costId,
+          obraId: record.projectId,
+          workerName: record.workerName,
+          workerCatalogId: record.workerId,
+          date: record.timestamp ? record.timestamp.split('T')[0] : nowIso.split('T')[0],
+          role: worker?.category || 'Oficial de Obra',
+          hours,
+          hourlyRate,
+          totalCost,
+          costType: 'horas',
+          notes: `[Visto Bueno Gerente: ${managerName || 'Gerente'}] Fichaje Portal en ${record.projectName || 'Obra'}. ${notes || ''}`.trim(),
+          fichajeId: record.id,
+          createdAt: nowIso,
+        };
+        await setDoc(doc(firestoreDb, 'personal', costId), personalDoc);
+        console.log(`[WorkerPortalService] Coste imputado en Firestore 'personal' (${costId}): ${totalCost}€ a obra ${record.projectId}`);
+
+        // Update fichaje in Firestore
+        await setDoc(doc(firestoreDb, 'fichajes', record.id), {
+          id: record.id,
+          workerId: record.workerId,
+          workerName: record.workerName,
+          obraId: record.projectId,
+          obraName: record.projectName,
+          date: record.timestamp ? record.timestamp.split('T')[0] : nowIso.split('T')[0],
+          totalHours: hours,
+          hourlyRate,
+          calculatedCost: totalCost,
+          status: 'completed',
+          approvalStatus: 'approved',
+          approvedAt: nowIso,
+          foremanName: managerName || 'Gerente de Obra',
+          foremanSignature: signature || '',
+          foremanNotes: notes || '',
+          personalCostId: costId,
+          updatedAt: nowIso,
+        }, { merge: true });
+      } catch (fsErr) {
+        console.error('[WorkerPortalService] Error al escribir coste en Firestore:', fsErr);
+      }
+    }
+
+    // Update in-memory project labor total
+    const project = projectsDb.find((p) => p.id === record.projectId);
+    if (project) {
+      project.laborCostTotal = Number(((project.laborCostTotal || 0) + totalCost).toFixed(2));
+    }
+
+    recordAuditLog(
+      'gerente',
+      'supervisor',
+      'TIME_RECORD_APPROVED',
+      {
+        recordId: record.id,
+        workerName: record.workerName,
+        projectId: record.projectId,
+        costAdded: totalCost,
+        managerName: managerName || 'Gerente',
+      },
+      record.workerId
+    );
+
+    return res.json({
+      success: true,
+      message: `Visto bueno otorgado por el Gerente. ${totalCost.toFixed(2)}€ imputados a la obra`,
+      record,
+      costId,
+      totalCost,
+    });
+  } catch (error: any) {
+    console.error('Error al aprobar fichaje:', error);
+    return res.status(500).json({ error: error.message });
   }
 }
 
 /**
  * WORKER: Clock-in / Clock-out
- * AUTOMATICALLY COMPUTES LABOR EXPENSE AND ATTRIBUTES IT TO THE PROJECT!
+ * Saves shift and prepares it for Gerente approval and cost allocation
  */
 export async function handleTimeRecord(req: Request, res: Response) {
   try {
@@ -621,16 +805,11 @@ export async function handleTimeRecord(req: Request, res: Response) {
     if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
 
     if (worker.status !== 'active') {
-      return res.status(403).json({ error: 'Cuenta no activa. No puede registrar fichajes' });
-    }
-
-    // Verify worker is authorized for this project
-    if (!worker.assignedProjectIds.includes(projectId)) {
-      return res.status(403).json({ error: 'No está autorizado a fichar en esta obra' });
+      return res.status(403).json({ error: 'El portal de este trabajador está inactivo o ha sido revocado. Contacte con el Gerente.' });
     }
 
     const project = projectsDb.find((p) => p.id === projectId);
-    if (!project) return res.status(404).json({ error: 'Obra no encontrada' });
+    if (!project) return res.status(404).json({ error: 'Obra no encontrada en el registro' });
 
     const nowIso = new Date().toISOString();
     let hoursWorked: number | undefined;
@@ -654,9 +833,6 @@ export async function handleTimeRecord(req: Request, res: Response) {
       }
 
       calculatedCost = Number((hoursWorked * worker.hourlyRate).toFixed(2));
-
-      // ATTRIBUTE LABOR COST DIRECTLY TO PROJECT
-      project.laborCostTotal = Number((project.laborCostTotal + calculatedCost).toFixed(2));
     }
 
     const record: TimeRecord = {
@@ -677,8 +853,43 @@ export async function handleTimeRecord(req: Request, res: Response) {
       status: 'valid',
       createdAt: nowIso,
     };
+    (record as any).approvalStatus = 'pending';
 
     timeRecordsDb.unshift(record);
+
+    // Save to Firestore 'fichajes' collection in real-time
+    if (firestoreDb) {
+      try {
+        const fichajeDoc = {
+          id: record.id,
+          workerId: worker.id,
+          workerName: worker.fullName,
+          workerDni: worker.dniNie || '',
+          role: worker.category,
+          obraId: project.id,
+          obraName: project.name,
+          date: nowIso.split('T')[0],
+          clockIn: type === 'check_in' ? new Date(nowIso).toTimeString().slice(0, 5) : '08:00',
+          clockOut: type === 'check_out' ? new Date(nowIso).toTimeString().slice(0, 5) : '',
+          breakMinutes: 0,
+          totalHours: hoursWorked || 0,
+          regularHours: hoursWorked ? Math.min(8, hoursWorked) : 0,
+          overtimeHours: hoursWorked ? Math.max(0, hoursWorked - 8) : 0,
+          hourlyRate: worker.hourlyRate,
+          overtimeRate: Number((worker.hourlyRate * 1.35).toFixed(2)),
+          calculatedCost: calculatedCost || 0,
+          status: type === 'check_out' ? 'completed' : 'active',
+          approvalStatus: 'pending',
+          notes: record.notes || '',
+          locationCoords: location ? { latitude: location.latitude, longitude: location.longitude } : undefined,
+          createdAt: nowIso,
+          updatedAt: nowIso,
+        };
+        await setDoc(doc(firestoreDb, 'fichajes', record.id), fichajeDoc);
+      } catch (fErr) {
+        console.warn('[WorkerPortalService] No se pudo escribir en Firestore fichajes:', fErr);
+      }
+    }
 
     recordAuditLog(
       worker.id,
@@ -689,7 +900,7 @@ export async function handleTimeRecord(req: Request, res: Response) {
         projectName: project.name,
         hoursWorked,
         calculatedCost,
-        updatedProjectLaborTotal: project.laborCostTotal,
+        approvalStatus: 'pending',
       },
       worker.id
     );
@@ -705,7 +916,7 @@ export async function handleTimeRecord(req: Request, res: Response) {
       message:
         type === 'check_in'
           ? `Entrada registrada con éxito en ${project.name}`
-          : `Salida registrada. ${hoursWorked}h computadas (+${calculatedCost}€ imputados a la obra)`,
+          : `Salida registrada (${hoursWorked}h). Fichaje enviado al Gerente para visto bueno e imputación de costes.`,
     });
   } catch (error: any) {
     console.error('Error al registrar fichaje:', error);
@@ -781,8 +992,10 @@ export async function handleGetWorkerProjects(req: Request, res: Response) {
     const worker = workersDb.find((w) => w.id === workerId);
     if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
 
-    const authorized = projectsDb.filter((p) => worker.assignedProjectIds.includes(p.id));
-    return res.json({ projects: authorized });
+    const authorized = projectsDb.filter((p) =>
+      !worker.assignedProjectIds || worker.assignedProjectIds.length === 0 || worker.assignedProjectIds.includes(p.id)
+    );
+    return res.json({ projects: authorized.length > 0 ? authorized : projectsDb });
   } catch (error: any) {
     return res.status(500).json({ error: error.message });
   }

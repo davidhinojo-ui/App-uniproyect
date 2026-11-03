@@ -111,8 +111,38 @@ export const App: React.FC = () => {
         api.getAllProjects(),
         api.getAllTimeRecords(),
       ]);
+
+      // Strictly registered obras only: include works registered in UniProyect
+      let registeredProjects = [...pList];
+      try {
+        const savedObras = localStorage.getItem('up_obras');
+        if (savedObras) {
+          const parsed = JSON.parse(savedObras);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const existingIds = new Set(registeredProjects.map((p) => p.id));
+            for (const o of parsed) {
+              if (o && o.id && o.name && !existingIds.has(o.id)) {
+                registeredProjects.push({
+                  id: o.id,
+                  organizationId: 'org-jose-real',
+                  code: o.id.startsWith('obra-') ? o.id.toUpperCase() : `OBRA-${o.id}`,
+                  name: o.name,
+                  address: o.location || '',
+                  client: o.description || '',
+                  status: o.status === 'on_hold' ? 'paused' : (o.status || 'active'),
+                  supervisorName: 'David Hinojo (Supervisor General)',
+                  budget: Number(o.budget) || 0,
+                  laborCostTotal: 0,
+                  createdAt: o.startDate || new Date().toISOString(),
+                });
+              }
+            }
+          }
+        }
+      } catch (_) {}
+
       setWorkers(wList);
-      setProjects(pList);
+      setProjects(registeredProjects);
       setRecords(rList);
 
       if (activeWorker) {

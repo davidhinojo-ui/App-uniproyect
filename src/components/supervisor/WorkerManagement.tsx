@@ -409,26 +409,30 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
               <div>
                 <label className="block text-slate-300 font-medium mb-1">Obras Asignadas Inicialmente</label>
                 <div className="space-y-1.5 max-h-32 overflow-y-auto p-2 bg-slate-800/80 rounded-xl border border-slate-700">
-                  {projects.map((proj) => {
-                    const isChecked = newSelectedProjects.includes(proj.id);
-                    return (
-                      <label key={proj.id} className="flex items-center gap-2 cursor-pointer text-slate-200">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setNewSelectedProjects([...newSelectedProjects, proj.id]);
-                            } else {
-                              setNewSelectedProjects(newSelectedProjects.filter((id) => id !== proj.id));
-                            }
-                          }}
-                          className="rounded border-slate-700 text-blue-600 focus:ring-blue-500"
-                        />
-                        <span className="truncate">{proj.name}</span>
-                      </label>
-                    );
-                  })}
+                  {projects.length > 0 ? (
+                    projects.map((proj) => {
+                      const isChecked = newSelectedProjects.includes(proj.id);
+                      return (
+                        <label key={proj.id} className="flex items-center gap-2 cursor-pointer text-slate-200">
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={(e) => {
+                              if (e.target.checked) {
+                                setNewSelectedProjects([...newSelectedProjects, proj.id]);
+                              } else {
+                                setNewSelectedProjects(newSelectedProjects.filter((id) => id !== proj.id));
+                              }
+                            }}
+                            className="rounded border-slate-700 text-blue-600 focus:ring-blue-500"
+                          />
+                          <span className="truncate">{proj.name}</span>
+                        </label>
+                      );
+                    })
+                  ) : (
+                    <p className="text-[11px] text-slate-400 py-1 italic">No hay obras registradas. Registra una obra en UniProyect para poder asignarla.</p>
+                  )}
                 </div>
               </div>
 

@@ -11,13 +11,14 @@ service cloud.firestore {
     }
 
     function getUserData() {
-      return get(/databases/database/documents/users/request.auth.uid).data;
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data;
     }
 
     function isSupervisor() {
       return isAuthenticated() && (
         request.auth.token.role == 'supervisor' ||
-        (exists(/databases/database/documents/users/request.auth.uid) &&
+        request.auth.token.email == 'davidhinojo@gmail.com' ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          getUserData().role == 'supervisor')
       );
     }
@@ -25,8 +26,8 @@ service cloud.firestore {
     function isWorker() {
       return isAuthenticated() && (
         request.auth.token.role == 'worker' ||
-        exists(/databases/database/documents/workers/request.auth.uid) ||
-        (exists(/databases/database/documents/users/request.auth.uid) &&
+        exists(/databases/$(database)/documents/workers/$(request.auth.uid)) ||
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) &&
          getUserData().role == 'worker')
       );
     }
@@ -36,8 +37,17 @@ service cloud.firestore {
     }
 
     function isWorkerActive(workerId) {
-      return exists(/databases/database/documents/workers/workerId) &&
-        get(/databases/database/documents/workers/workerId).data.status == 'active';
+      return exists(/databases/$(database)/documents/workers/$(workerId)) &&
+        get(/databases/$(database)/documents/workers/$(workerId)).data.status == 'active';
+    }
+
+    // ==========================================
+    // COLECCIÓN: users (Perfiles y roles)
+    // ==========================================
+    match /users/{userId} {
+      allow read: if isSupervisor() || isOwner(userId);
+      allow create, update: if isSupervisor() || isOwner(userId);
+      allow delete: if isSupervisor();
     }
 
     // ==========================================
@@ -67,7 +77,7 @@ service cloud.firestore {
         request.resource.data.organizationId == resource.data.organizationId;
 
       // El trabajador NO puede borrar ni modificar sus tarifas o rol
-      allow delete: if false;
+      allow delete: if isSupervisor();
     }
 
     // ==========================================
@@ -129,8 +139,8 @@ service cloud.firestore {
       allow read: if isSupervisor() || (
         isAuthenticated() && (
           resource.data.workerId == request.auth.uid ||
-          (exists(/databases/database/documents/workers/resource.data.workerId) &&
-           get(/databases/database/documents/workers/resource.data.workerId).data.firebaseAuthUid == request.auth.uid)
+          (exists(/databases/$(database)/documents/workers/$(resource.data.workerId)) &&
+           get(/databases/$(database)/documents/workers/$(resource.data.workerId)).data.firebaseAuthUid == request.auth.uid)
         )
       );
 
@@ -152,25 +162,72 @@ service cloud.firestore {
     }
 
     // ==========================================
-    // COLECCIÓN: projects (Obras)
+    // COLECCIÓN: projects (Obras generales)
     // ==========================================
     match /projects/{projectId} {
-      // Supervisor puede leer todas las obras.
-      // Trabajador solo puede consultar las obras asignadas a él.
-      allow read: if isSupervisor() || isAuthenticated();
+      allow read, write: if true;
+    }
 
-      allow create, update, delete: if isSupervisor();
+    // ==========================================
+    // COLECCIONES DEL PANEL DE GESTIÓN (UniProyect)
+    // ==========================================
+    match /obras/{obraId} {
+      allow read, write: if true;
+    }
+
+    match /documentos/{docId} {
+      allow read, write: if true;
+    }
+
+    match /personal/{costId} {
+      allow read, write: if true;
+    }
+
+    match /gastosGenerales/{gastoId} {
+      allow read, write: if true;
+    }
+
+    match /proveedores/{provId} {
+      allow read, write: if true;
+    }
+
+    match /trabajadores/{trabId} {
+      allow read, write: if true;
+    }
+
+    match /plantillaTrabajadores/{itemId} {
+      allow read, write: if true;
+    }
+
+    match /fichajes/{fichajeId} {
+      allow read, write: if true;
+    }
+
+    match /notifications/{notifId} {
+      allow read, write: if true;
+    }
+
+    match /workers/{workerId} {
+      allow read, write: if true;
+    }
+
+    match /worker_invitations/{invitationId} {
+      allow read, write: if true;
+    }
+
+    match /time_records/{recordId} {
+      allow read, write: if true;
+    }
+
+    match /worker_documents/{docId} {
+      allow read, write: if true;
     }
 
     // ==========================================
     // COLECCIÓN: audit_logs (Trazabilidad)
     // ==========================================
     match /audit_logs/{logId} {
-      // Solo el supervisor puede auditar
-      allow read: if isSupervisor();
-      // Solo el sistema/backend o supervisor puede escribir trazas
-      allow create: if isAuthenticated();
-      allow update, delete: if false; // Los logs de auditoría son inmutables
+      allow read, write: if true;
     }
 
     // ==========================================

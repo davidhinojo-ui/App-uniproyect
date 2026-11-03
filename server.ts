@@ -22,12 +22,15 @@ import {
   handleActivateWorker,
   handleWorkerLogin,
   handleRevokeWorker,
+  handleActivateWorkerPortal,
+  handleApproveTimeRecord,
   handleTimeRecord,
   handleGetWorkerTimeRecords,
   handleGetWorkerDocuments,
   handleSignDocument,
   handleGetWorkerProjects,
   recordAuditLog,
+  syncFromFirestore,
 } from './src/server/workerPortalService.js';
 
 const app = express();
@@ -462,7 +465,7 @@ app.post('/api/supervisor/workers', (req, res) => {
       dniNie: String(dniNie || '').trim().toUpperCase(),
       category: String(category).trim(),
       hourlyRate: Number(hourlyRate),
-      assignedProjectIds: Array.isArray(assignedProjectIds) ? assignedProjectIds : ['proj-001'],
+      assignedProjectIds: Array.isArray(assignedProjectIds) ? assignedProjectIds : [],
       status: 'pending' as const,
       firebaseAuthUid: null,
       email: email ? String(email).trim().toLowerCase() : undefined,
@@ -508,9 +511,74 @@ app.get('/api/supervisor/projects', (req, res) => {
   res.json({ projects: projectsDb });
 });
 
+app.post('/api/supervisor/projects', (req, res) => {
+  try {
+    const { id, code, name, address, location, client, description, budget } = req.body;
+    if (!name) {
+      return res.status(400).json({ error: 'Falta el nombre de la obra' });
+    }
+    const newProject = {
+      id: id || `proj-${Date.now().toString().slice(-4)}`,
+      organizationId: 'org-jose-real',
+      code: code || `OBRA-${Date.now().toString().slice(-4)}`,
+      name: String(name).trim(),
+      address: String(address || location || '').trim(),
+      client: String(client || description || '').trim(),
+      status: 'active' as const,
+      supervisorName: 'David Hinojo (Supervisor General)',
+      budget: Number(budget) || 0,
+      laborCostTotal: 0,
+      materialCostTotal: 0,
+      createdAt: new Date().toISOString(),
+    };
+    projectsDb.push(newProject);
+    res.json({ success: true, project: newProject });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+app.post('/api/supervisor/sync-projects', (req, res) => {
+  try {
+    const { projects } = req.body;
+    if (Array.isArray(projects)) {
+      projectsDb.length = 0;
+      for (const p of projects) {
+        if (p && p.name) {
+          projectsDb.push({
+            id: p.id || `proj-${Date.now().toString().slice(-4)}`,
+            organizationId: 'org-jose-real',
+            code: p.code || p.id || '',
+            name: String(p.name).trim(),
+            address: String(p.address || p.location || '').trim(),
+            client: String(p.client || p.description || '').trim(),
+            status: p.status === 'on_hold' ? 'paused' : (p.status || 'active'),
+            supervisorName: p.supervisorName || 'David Hinojo (Supervisor General)',
+            budget: Number(p.budget) || 0,
+            laborCostTotal: Number(p.laborCostTotal) || 0,
+            materialCostTotal: Number(p.materialCostTotal) || 0,
+            createdAt: p.startDate || p.createdAt || new Date().toISOString(),
+          });
+        }
+      }
+    }
+    res.json({ success: true, count: projectsDb.length });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 app.get('/api/supervisor/time-records', (req, res) => {
   res.json({ records: timeRecordsDb });
 });
+
+// Aprobación oficial del Gerente de Obra con imputación directa a la colección 'personal'
+app.post('/api/supervisor/time-records/:id/approve', handleApproveTimeRecord);
+
+// Revocación / eliminación de portal para trabajadores designados
+app.post('/api/supervisor/workers/:id/revoke-portal', handleRevokeWorker);
+app.delete('/api/supervisor/workers/:id/portal', handleRevokeWorker);
+app.post('/api/supervisor/workers/:id/activate-portal', handleActivateWorkerPortal);
 
 app.get('/api/supervisor/audit-logs', (req, res) => {
   res.json({ logs: auditLogsDb });
@@ -518,6 +586,9 @@ app.get('/api/supervisor/audit-logs', (req, res) => {
 
 // Start integration with Vite or production file serving
 async function startServer() {
+  // Sincronizar datos iniciales desde Firestore
+  syncFromFirestore().catch((err) => console.warn('Error inicializando Firestore sync:', err));
+
   const distPath = path.join(process.cwd(), 'dist');
   
   if (!isProduction) {

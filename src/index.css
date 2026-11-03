@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 @layer base {
   :root {
@@ -370,3 +371,99 @@ body:has(.up-worker-nav) .uniproyect-theme-switch {
   html[data-theme] :is(button, a).hover\:bg-rose-500:hover { background-color: var(--up-action-rose); color: #ffffff !important; }
   html[data-theme] :is(button, a).hover\:bg-rose-500:hover :is(span, svg) { color: #ffffff !important; }
 }
+
+/* =========================================================================
+   UNIVERSAL HIGH-LEGIBILITY LIGHT MODE TYPOGRAPHY & GRADIENT ATMOSPHERE
+   ========================================================================= */
+
+/* All white-opacity variations (text-white/10 through text-white/95) on light surfaces */
+html[data-theme="light"] :is(
+  .text-white\/95, .text-white\/90, .text-white\/85, .text-white\/80,
+  [class*="text-white/95"], [class*="text-white/90"], [class*="text-white/85"], [class*="text-white/80"]
+) {
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] :is(
+  .text-white\/75, .text-white\/70, .text-white\/65, .text-white\/60,
+  [class*="text-white/75"], [class*="text-white/70"], [class*="text-white/65"], [class*="text-white/60"]
+) {
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] :is(
+  .text-white\/55, .text-white\/50, .text-white\/45, .text-white\/40,
+  [class*="text-white/55"], [class*="text-white/50"], [class*="text-white/45"], [class*="text-white/40"]
+) {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] :is(
+  .text-white\/35, .text-white\/30, .text-white\/25, .text-white\/20, .text-white\/15, .text-white\/10,
+  [class*="text-white/35"], [class*="text-white/30"], [class*="text-white/25"], [class*="text-white/20"], [class*="text-white/15"], [class*="text-white/10"]
+) {
+  color: #475569 !important;
+}
+
+/* Zinc, Gray, Neutral palettes in Light Mode - prevent low-contrast washed-out text */
+html[data-theme="light"] :is(.text-zinc-400, .text-zinc-500, .text-gray-400, .text-gray-500, .text-neutral-400, .text-neutral-500) {
+  color: #334155 !important;
+}
+
+html[data-theme="light"] :is(.text-zinc-200, .text-zinc-300, .text-gray-200, .text-gray-300, .text-neutral-200, .text-neutral-300, .text-zinc-100, .text-zinc-50) {
+  color: #1e293b !important;
+}
+
+html[data-theme="light"] :is(.text-zinc-600, .text-gray-600, .text-neutral-600) {
+  color: #475569 !important;
+}
+
+/* Warnings and callouts: amber and yellow texts must be dark enough on light backgrounds */
+html[data-theme="light"] :is(.text-amber-200, .text-yellow-200, .text-yellow-300, .text-amber-500, .text-yellow-500) {
+  color: #92400e !important;
+  font-weight: 700;
+}
+
+/* Danger / alerts: red texts */
+html[data-theme="light"] :is(.text-red-400, .text-red-300, .text-red-200, .text-red-500) {
+  color: #991b1b !important;
+  font-weight: 700;
+}
+
+/* Form input placeholders in light mode */
+html[data-theme="light"] :is(input, textarea)::placeholder,
+html[data-theme="light"] [class*="placeholder-white"]::placeholder {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+/* Light mode card surface gradient mesh to enhance visual atmosphere */
+html[data-theme="light"] body {
+  background: radial-gradient(at 0% 0%, rgba(219, 234, 254, 0.45) 0px, transparent 40%),
+              radial-gradient(at 100% 0%, rgba(209, 250, 229, 0.40) 0px, transparent 40%),
+              radial-gradient(at 50% 100%, rgba(241, 245, 249, 0.70) 0px, transparent 50%),
+              #f8fafc !important;
+  background-attachment: fixed !important;
+}
+
+/* Dark mode atmospheric gradient */
+html[data-theme="dark"] body,
+html:not([data-theme="light"]) body {
+  background: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.04) 0px, transparent 40%),
+              radial-gradient(at 100% 0%, rgba(59, 130, 246, 0.03) 0px, transparent 40%),
+              #09090b !important;
+  background-attachment: fixed !important;
+}
+
+/* Ensure solid color buttons retain pure white text */
+html[data-theme="light"] :is(button, a):is(.bg-blue-600, .bg-blue-600\/90, .bg-blue-500, .bg-emerald-600, .bg-emerald-500, .bg-amber-600, .bg-amber-500, .bg-rose-600, .bg-rose-500, .bg-red-600, .bg-red-500),
+html[data-theme="light"] :is(button, a):is(.bg-blue-600, .bg-blue-600\/90, .bg-blue-500, .bg-emerald-600, .bg-emerald-500, .bg-amber-600, .bg-amber-500, .bg-rose-600, .bg-rose-500, .bg-red-600, .bg-red-500) :is(span, p, svg, strong, div, [class*="text-white"]) {
+  color: #ffffff !important;
+}
+
+/* Exception for active segmented gradient tab which has black text */
+html[data-theme="light"] :is(button, a).bg-gradient-to-r.text-black,
+html[data-theme="light"] :is(button, a).bg-gradient-to-r.text-black :is(span, svg) {
+  color: #000000 !important;
+}
+
