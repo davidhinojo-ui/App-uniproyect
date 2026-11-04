@@ -36,8 +36,8 @@ export function WorkspaceRouter() {
   return (
     <>
       {!isDirectWorkerPortal && (
-        <nav aria-label="Áreas de UniProyect" className="sticky top-0 z-50 border-b border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 px-4 sm:px-6 lg:px-8 xl:px-12 2xl:px-16 py-2.5 shadow-sm">
-          <div className="w-full max-w-[2400px] mx-auto flex flex-wrap items-center justify-between gap-3">
+        <nav aria-label="Áreas de UniProyect" className="sticky top-0 z-50 border-b border-slate-700/80 bg-gradient-to-r from-slate-900 via-slate-850 to-slate-900 px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12 py-2.5 shadow-sm">
+          <div className="w-full max-w-full mx-auto flex flex-wrap items-center justify-between gap-3">
             <div className="flex flex-wrap items-center gap-2">
               <a href="#" aria-current={!workforce ? 'page' : undefined} className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${!workforce ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>Obras y costes</a>
               <a href="#workforce" aria-current={workforce ? 'page' : undefined} className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${workforce ? 'bg-blue-600 text-white shadow-md' : 'bg-slate-800 hover:bg-slate-700 text-slate-300'}`}>Trabajadores y fichajes</a>
@@ -45,7 +45,7 @@ export function WorkspaceRouter() {
             <div className="hidden sm:flex items-center gap-2 text-xs text-slate-400 font-medium">
               <span className="font-semibold text-slate-300">UniProyect</span>
               <span aria-hidden="true">·</span>
-              <span>José Real Construcciones</span>
+              <span>Control de Obras y Costes</span>
             </div>
           </div>
         </nav>

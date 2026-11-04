@@ -1,148 +1,278 @@
 "use strict";
 import crypto from "crypto";
 import QRCode from "qrcode";
+import fs from "fs";
+import path from "path";
+import { initializeApp, getApps, getApp } from "firebase/app";
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
 const ORG_ID = "org-jose-real";
 const ORG_NAME = "Jos\xE9 Real Construcciones, S.L.";
-export const projectsDb = [];
+export let firestoreDb = null;
+try {
+  const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
+  if (fs.existsSync(configPath)) {
+    const config = JSON.parse(fs.readFileSync(configPath, "utf8"));
+    const app = getApps().length === 0 ? initializeApp(config) : getApp();
+    firestoreDb = getFirestore(app, config.firestoreDatabaseId);
+    console.log("[WorkerPortalService] Firestore inicializado con base de datos:", config.firestoreDatabaseId);
+  }
+} catch (e) {
+  console.warn("[WorkerPortalService] Inicializaci\xF3n de Firestore omitida o fallida:", e);
+}
+export const projectsDb = [
+  {
+    id: "obra-1788795466519",
+    organizationId: ORG_ID,
+    code: "OBRA-REHAB",
+    name: "REHABILITACION CIBIERTA EDIF. RESIDENCIAL",
+    address: "Arcos de la Frontera",
+    client: "Comunidad de Propietarios",
+    status: "active",
+    supervisorName: "David Hinojo (Supervisor General)",
+    budget: 45e3,
+    laborCostTotal: 0,
+    createdAt: "2026-09-01T08:00:00Z"
+  },
+  {
+    id: "obra-1788795466897",
+    organizationId: ORG_ID,
+    code: "100626",
+    name: "100626_Obra Tom\xE1s Garc\xEDa Figueras",
+    address: "Jerez de la Frontera",
+    client: "Tom\xE1s Garc\xEDa Figueras",
+    status: "active",
+    supervisorName: "David Hinojo (Supervisor General)",
+    budget: 85e3,
+    laborCostTotal: 0,
+    createdAt: "2026-09-15T08:00:00Z"
+  },
+  {
+    id: "obra-1788795467133",
+    organizationId: ORG_ID,
+    code: "OBRA-ESPERA",
+    name: "REFORMA ESPERA",
+    address: "Espera (C\xE1diz)",
+    client: "Reforma Integral Vivienda",
+    status: "active",
+    supervisorName: "David Hinojo (Supervisor General)",
+    budget: 32e3,
+    laborCostTotal: 0,
+    createdAt: "2026-09-20T08:00:00Z"
+  },
+  {
+    id: "obra-1792510754303",
+    organizationId: ORG_ID,
+    code: "OBRA-AGUAS",
+    name: "PLAZA DE LAS AGUAS",
+    address: "Arcos de la Frontera",
+    client: "Ayuntamiento de Arcos",
+    status: "active",
+    supervisorName: "David Hinojo (Supervisor General)",
+    budget: 12e4,
+    laborCostTotal: 0,
+    createdAt: "2026-10-01T08:00:00Z"
+  },
+  {
+    id: "obra-1793129569377",
+    organizationId: ORG_ID,
+    code: "OBRA-PERRO",
+    name: "CUESTA EL PERRO",
+    address: "Arcos de la Frontera",
+    client: "Pavimentaci\xF3n y Accesos",
+    status: "active",
+    supervisorName: "David Hinojo (Supervisor General)",
+    budget: 64e3,
+    laborCostTotal: 0,
+    createdAt: "2026-10-10T08:00:00Z"
+  }
+];
 export const workersDb = [
   {
-    id: "w-101",
+    id: "trab-emp-1788362023057",
     organizationId: ORG_ID,
-    fullName: "Manuel Garc\xEDa Rodr\xEDguez",
-    dniNie: "48392019K",
-    category: "Oficial 1\xAA Alba\xF1il",
-    hourlyRate: 19.5,
-    assignedProjectIds: [],
+    fullName: "JOSE MANUEL ORDO\xD1EZ ROND\xC1N",
+    dniNie: "44052426C",
+    category: "Encargado de Obra",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
-    firebaseAuthUid: "uid-w-101",
-    email: "m.garcia@construccionesreal.es",
-    phone: "+34 611 223 344",
-    pin: "1234",
+    phone: "653284276",
     activationCount: 1,
-    lastLoginAt: "2026-10-31T08:15:00Z",
-    createdAt: "2026-01-20T08:00:00Z",
+    createdAt: "2026-09-01T08:00:00Z",
     updatedAt: "2026-10-31T08:00:00Z"
   },
   {
-    id: "w-102",
+    id: "trab-emp-1788447093726",
     organizationId: ORG_ID,
-    fullName: "Antonio Romero Ben\xEDtez",
-    dniNie: "31940283T",
-    category: "Pe\xF3n Especialista",
-    hourlyRate: 16,
-    assignedProjectIds: [],
+    fullName: "JUAN PABLO MANCHE\xD1O PERDIGONES",
+    dniNie: "31714722E",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
-    firebaseAuthUid: "uid-w-102",
-    email: "a.romero@construccionesreal.es",
-    phone: "+34 622 334 455",
-    pin: "4321",
     activationCount: 1,
-    lastLoginAt: "2026-10-30T17:40:00Z",
-    createdAt: "2026-02-10T08:00:00Z",
-    updatedAt: "2026-10-30T17:40:00Z"
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
   },
   {
-    id: "w-103",
+    id: "trab-emp-1788447139258",
     organizationId: ORG_ID,
-    fullName: "Javier Mart\xEDnez Delgado",
-    dniNie: "52849102L",
-    category: "Oficial 1\xAA Encofrador",
-    hourlyRate: 21,
-    assignedProjectIds: [],
-    status: "pending",
-    // Pending QR activation
-    firebaseAuthUid: null,
-    email: "j.martinez@construccionesreal.es",
-    phone: "+34 633 445 566",
-    pin: void 0,
-    activationCount: 0,
-    createdAt: "2026-10-25T09:30:00Z",
-    updatedAt: "2026-10-25T09:30:00Z"
+    fullName: "ALFONSO LUIS FLORES MACIAS",
+    dniNie: "75776604E",
+    category: "Pe\xF3n Especialista",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
   },
   {
-    id: "w-104",
+    id: "trab-emp-1788447322110",
     organizationId: ORG_ID,
-    fullName: "Pedro S\xE1nchez Morales",
-    dniNie: "77291048M",
-    category: "Oficial Electricista",
-    hourlyRate: 22.5,
-    assignedProjectIds: [],
-    status: "suspended",
-    firebaseAuthUid: "uid-w-104",
-    email: "p.sanchez@construccionesreal.es",
-    phone: "+34 644 556 677",
-    pin: "5678",
+    fullName: "RAFAEL JIMENEZ GALINDO",
+    dniNie: "53154499G",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
     activationCount: 1,
-    createdAt: "2026-03-01T08:00:00Z",
-    updatedAt: "2026-10-20T11:00:00Z"
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1788448423610",
+    organizationId: ORG_ID,
+    fullName: "ANDR\xC9S MANCHE\xD1O LOPEZ",
+    dniNie: "",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1788448552984",
+    organizationId: ORG_ID,
+    fullName: "DAVID BAREA FERNANDEZ",
+    dniNie: "",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1788448806082",
+    organizationId: ORG_ID,
+    fullName: "ABRAHAM MANCHE\xD1O LOPEZ",
+    dniNie: "32057606E",
+    category: "Gruista",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1791209906770",
+    organizationId: ORG_ID,
+    fullName: "Jes\xFAs Collantes",
+    dniNie: "",
+    category: "Pe\xF3n Ordinario",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1791210035818",
+    organizationId: ORG_ID,
+    fullName: "MARCOS JESUS COLLANTES GUERRERO",
+    dniNie: "31737970V",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
+  },
+  {
+    id: "trab-emp-1791297516908",
+    organizationId: ORG_ID,
+    fullName: "JORGE NAVES",
+    dniNie: "74927270D",
+    category: "Oficial de 1\xAA Alba\xF1il",
+    hourlyRate: 14,
+    assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
+    status: "active",
+    activationCount: 1,
+    createdAt: "2026-09-01T08:00:00Z",
+    updatedAt: "2026-10-31T08:00:00Z"
   }
 ];
+export async function syncFromFirestore() {
+  if (!firestoreDb) return;
+  try {
+    const [workersSnap, obrasSnap] = await Promise.all([
+      getDocs(collection(firestoreDb, "plantillaTrabajadores")),
+      getDocs(collection(firestoreDb, "obras"))
+    ]);
+    if (!obrasSnap.empty) {
+      projectsDb.length = 0;
+      obrasSnap.forEach((d) => {
+        const data = d.data();
+        projectsDb.push({
+          id: d.id,
+          organizationId: ORG_ID,
+          code: data.code || d.id,
+          name: data.name,
+          address: data.location || "",
+          client: data.description || "",
+          status: data.status === "on_hold" ? "paused" : data.status || "active",
+          supervisorName: "David Hinojo (Supervisor General)",
+          budget: Number(data.budget) || 0,
+          laborCostTotal: 0,
+          createdAt: data.startDate || (/* @__PURE__ */ new Date()).toISOString()
+        });
+      });
+    }
+    if (!workersSnap.empty) {
+      workersDb.length = 0;
+      workersSnap.forEach((d) => {
+        const data = d.data();
+        const stdRate = Number(data.standardHourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : 14);
+        workersDb.push({
+          id: d.id,
+          organizationId: ORG_ID,
+          fullName: data.name,
+          dniNie: data.dni || "",
+          category: data.role || "Oficial de Obra",
+          hourlyRate: stdRate,
+          assignedProjectIds: projectsDb.map((p) => p.id),
+          status: data.active === false ? "suspended" : "active",
+          phone: data.phone || "",
+          activationCount: 1,
+          createdAt: (/* @__PURE__ */ new Date()).toISOString(),
+          updatedAt: (/* @__PURE__ */ new Date()).toISOString()
+        });
+      });
+    }
+    console.log(`[WorkerPortalService] Sincronizaci\xF3n exitosa: ${workersDb.length} trabajadores y ${projectsDb.length} obras reales.`);
+  } catch (err) {
+    console.warn("[WorkerPortalService] Fallo al sincronizar desde Firestore:", err);
+  }
+}
+export const workerDocumentsDb = [];
 export const timeRecordsDb = [];
-export const workerDocumentsDb = [
-  {
-    id: "doc-001",
-    workerId: "w-101",
-    organizationId: ORG_ID,
-    title: "N\xF3mina Oficial - Octubre 2026",
-    type: "payroll",
-    period: "Octubre 2026",
-    fileUrl: "/docs/nomina-manuel-octubre-2026.pdf",
-    fileSize: 148200,
-    uploadedAt: "2026-10-28T10:00:00Z",
-    signed: true,
-    signedAt: "2026-10-29T12:30:00Z"
-  },
-  {
-    id: "doc-002",
-    workerId: "w-101",
-    organizationId: ORG_ID,
-    title: "Certificado Reconocimiento M\xE9dico 2026",
-    type: "medical",
-    period: "A\xF1o 2026",
-    fileUrl: "/docs/medico-manuel-2026.pdf",
-    fileSize: 220500,
-    uploadedAt: "2026-02-14T09:00:00Z",
-    signed: true,
-    signedAt: "2026-02-14T11:00:00Z"
-  },
-  {
-    id: "doc-003",
-    workerId: "w-101",
-    organizationId: ORG_ID,
-    title: "Certificado Curso PRL 20 Horas Alba\xF1iler\xEDa",
-    type: "safety_prl",
-    period: "Vigente",
-    fileUrl: "/docs/prl-20h-manuel.pdf",
-    fileSize: 310400,
-    uploadedAt: "2026-01-20T10:00:00Z",
-    signed: true,
-    signedAt: "2026-01-20T10:15:00Z"
-  },
-  {
-    id: "doc-004",
-    workerId: "w-102",
-    organizationId: ORG_ID,
-    title: "N\xF3mina Oficial - Octubre 2026",
-    type: "payroll",
-    period: "Octubre 2026",
-    fileUrl: "/docs/nomina-antonio-octubre-2026.pdf",
-    fileSize: 145100,
-    uploadedAt: "2026-10-28T10:00:00Z",
-    signed: false
-  },
-  {
-    id: "doc-005",
-    workerId: "w-103",
-    organizationId: ORG_ID,
-    title: "Contrato de Trabajo Indefinido",
-    type: "contract",
-    period: "2026",
-    fileUrl: "/docs/contrato-javier.pdf",
-    fileSize: 480200,
-    uploadedAt: "2026-10-25T10:00:00Z",
-    signed: false
-  }
-];
 export const workerInvitationsMap = /* @__PURE__ */ new Map();
 export const auditLogsDb = [
   {
@@ -189,7 +319,7 @@ export async function handleCreateInvitation(req, res) {
     const protocol = req.headers["x-forwarded-proto"] || req.protocol || "http";
     const host = req.headers["x-forwarded-host"] || req.headers.host || "localhost:3000";
     const origin = `${protocol}://${host}`;
-    const activationUrl = `${origin}/#activar?token=${plainToken}`;
+    const activationUrl = `${origin}/#portal?w=${encodeURIComponent(worker.id)}&token=${encodeURIComponent(plainToken)}`;
     const qrCodeUrl = await QRCode.toDataURL(activationUrl, {
       errorCorrectionLevel: "M",
       margin: 2,
@@ -389,7 +519,8 @@ export async function handleWorkerLogin(req, res) {
 }
 export async function handleRevokeWorker(req, res) {
   try {
-    const { workerId, reason } = req.body;
+    const workerId = req.body.workerId || req.params.id;
+    const reason = req.body.reason;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
     const worker = workersDb.find((w) => w.id === workerId);
     if (!worker) return res.status(404).json({ error: "Trabajador no encontrado" });
@@ -401,16 +532,161 @@ export async function handleRevokeWorker(req, res) {
       }
     }
     recordAuditLog(
-      "supervisor-david",
+      "gerente",
       "supervisor",
-      "WORKER_REVOKED",
-      { workerId: worker.id, reason: reason || "Revocaci\xF3n por supervisor" },
+      "WORKER_PORTAL_REVOKED",
+      { workerId: worker.id, fullName: worker.fullName, reason: reason || "Portal eliminado/revocado por el Gerente" },
       worker.id
     );
-    return res.json({ success: true, message: "Acceso revocado de inmediato" });
+    return res.json({ success: true, message: `Portal revocado para ${worker.fullName}` });
   } catch (error) {
     console.error("Error al revocar trabajador:", error);
-    return res.status(500).json({ error: "Error al revocar acceso" });
+    return res.status(500).json({ error: "Error al revocar portal: " + error.message });
+  }
+}
+export async function handleActivateWorkerPortal(req, res) {
+  try {
+    const workerId = req.body.workerId || req.params.id;
+    if (!workerId) return res.status(400).json({ error: "Falta workerId" });
+    const worker = workersDb.find((w) => w.id === workerId);
+    if (!worker) return res.status(404).json({ error: "Trabajador no encontrado" });
+    worker.status = "active";
+    worker.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    recordAuditLog(
+      "gerente",
+      "supervisor",
+      "WORKER_PORTAL_ACTIVATED",
+      { workerId: worker.id, fullName: worker.fullName },
+      worker.id
+    );
+    return res.json({ success: true, message: `Portal reactivado para ${worker.fullName}`, worker });
+  } catch (error) {
+    console.error("Error al reactivar portal:", error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+export async function handleDeleteWorker(req, res) {
+  try {
+    const workerId = req.params.id || req.body.workerId;
+    if (!workerId) return res.status(400).json({ error: "Falta workerId" });
+    const idx = workersDb.findIndex((w) => w.id === workerId);
+    if (idx === -1) return res.status(404).json({ error: "Trabajador no encontrado" });
+    const worker = workersDb[idx];
+    workersDb.splice(idx, 1);
+    for (const [hash, inv] of workerInvitationsMap.entries()) {
+      if (inv.workerId === workerId) {
+        workerInvitationsMap.delete(hash);
+      }
+    }
+    if (firestoreDb) {
+      try {
+        await deleteDoc(doc(firestoreDb, "plantillaTrabajadores", workerId));
+        console.log(`[WorkerPortalService] Tarjeta de trabajador eliminada de Firestore: ${workerId}`);
+      } catch (fErr) {
+        console.warn("[WorkerPortalService] Error al eliminar de Firestore plantillaTrabajadores:", fErr);
+      }
+    }
+    recordAuditLog(
+      "gerente",
+      "supervisor",
+      "WORKER_DELETED",
+      { workerId, fullName: worker.fullName },
+      workerId
+    );
+    return res.json({ success: true, message: `Tarjeta de ${worker.fullName} eliminada correctamente`, workerId });
+  } catch (error) {
+    console.error("Error al eliminar trabajador:", error);
+    return res.status(500).json({ error: "Error al eliminar trabajador: " + error.message });
+  }
+}
+export async function handleApproveTimeRecord(req, res) {
+  try {
+    const recordId = req.params.id || req.body.recordId;
+    const { managerName, notes, signature } = req.body;
+    if (!recordId) return res.status(400).json({ error: "Falta recordId" });
+    const record = timeRecordsDb.find((r) => r.id === recordId);
+    if (!record) return res.status(404).json({ error: "Fichaje no encontrado" });
+    const worker = workersDb.find((w) => w.id === record.workerId);
+    const hourlyRate = record.hourlyRate || worker?.hourlyRate || 14;
+    const hours = record.hoursWorked || 8;
+    const totalCost = Number((record.calculatedCost || hours * hourlyRate).toFixed(2));
+    const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+    record.status = "valid";
+    record.approvalStatus = "approved";
+    record.approvedAt = nowIso;
+    record.managerName = managerName || "Gerente de Obra";
+    record.managerSignature = signature;
+    record.managerNotes = notes;
+    const costId = `cost-fichaje-${record.id}`;
+    if (firestoreDb) {
+      try {
+        const personalDoc = {
+          id: costId,
+          obraId: record.projectId,
+          workerName: record.workerName,
+          workerCatalogId: record.workerId,
+          date: record.timestamp ? record.timestamp.split("T")[0] : nowIso.split("T")[0],
+          role: worker?.category || "Oficial de Obra",
+          hours,
+          hourlyRate,
+          totalCost,
+          costType: "horas",
+          notes: `[Visto Bueno Gerente: ${managerName || "Gerente"}] Fichaje Portal en ${record.projectName || "Obra"}. ${notes || ""}`.trim(),
+          fichajeId: record.id,
+          createdAt: nowIso
+        };
+        await setDoc(doc(firestoreDb, "personal", costId), personalDoc);
+        console.log(`[WorkerPortalService] Coste imputado en Firestore 'personal' (${costId}): ${totalCost}\u20AC a obra ${record.projectId}`);
+        await setDoc(doc(firestoreDb, "fichajes", record.id), {
+          id: record.id,
+          workerId: record.workerId,
+          workerName: record.workerName,
+          obraId: record.projectId,
+          obraName: record.projectName,
+          date: record.timestamp ? record.timestamp.split("T")[0] : nowIso.split("T")[0],
+          totalHours: hours,
+          hourlyRate,
+          calculatedCost: totalCost,
+          status: "completed",
+          approvalStatus: "approved",
+          approvedAt: nowIso,
+          foremanName: managerName || "Gerente de Obra",
+          foremanSignature: signature || "",
+          foremanNotes: notes || "",
+          personalCostId: costId,
+          updatedAt: nowIso
+        }, { merge: true });
+      } catch (fsErr) {
+        console.error("[WorkerPortalService] Error al escribir coste en Firestore:", fsErr);
+      }
+    }
+    const project = projectsDb.find((p) => p.id === record.projectId);
+    if (project) {
+      project.laborCostTotal = Number(((project.laborCostTotal || 0) + totalCost).toFixed(2));
+    }
+    recordAuditLog(
+      "gerente",
+      "supervisor",
+      "TIME_RECORD_APPROVED",
+      {
+        recordId: record.id,
+        workerName: record.workerName,
+        projectId: record.projectId,
+        costAdded: totalCost,
+        managerName: managerName || "Gerente"
+      },
+      record.workerId
+    );
+    return res.json({
+      success: true,
+      message: `Visto bueno otorgado por el Gerente. ${totalCost.toFixed(2)}\u20AC imputados a la obra`,
+      record,
+      costId,
+      totalCost
+    });
+  } catch (error) {
+    console.error("Error al aprobar fichaje:", error);
+    return res.status(500).json({ error: error.message });
   }
 }
 export async function handleTimeRecord(req, res) {
@@ -425,13 +701,10 @@ export async function handleTimeRecord(req, res) {
     const worker = workersDb.find((w) => w.id === workerId);
     if (!worker) return res.status(404).json({ error: "Trabajador no encontrado" });
     if (worker.status !== "active") {
-      return res.status(403).json({ error: "Cuenta no activa. No puede registrar fichajes" });
-    }
-    if (!worker.assignedProjectIds.includes(projectId)) {
-      return res.status(403).json({ error: "No est\xE1 autorizado a fichar en esta obra" });
+      return res.status(403).json({ error: "El portal de este trabajador est\xE1 inactivo o ha sido revocado. Contacte con el Gerente." });
     }
     const project = projectsDb.find((p) => p.id === projectId);
-    if (!project) return res.status(404).json({ error: "Obra no encontrada" });
+    if (!project) return res.status(404).json({ error: "Obra no encontrada en el registro" });
     const nowIso = (/* @__PURE__ */ new Date()).toISOString();
     let hoursWorked;
     let calculatedCost;
@@ -446,7 +719,6 @@ export async function handleTimeRecord(req, res) {
         hoursWorked = 8;
       }
       calculatedCost = Number((hoursWorked * worker.hourlyRate).toFixed(2));
-      project.laborCostTotal = Number((project.laborCostTotal + calculatedCost).toFixed(2));
     }
     const record = {
       id: `tr-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
@@ -466,7 +738,40 @@ export async function handleTimeRecord(req, res) {
       status: "valid",
       createdAt: nowIso
     };
+    record.approvalStatus = "pending";
     timeRecordsDb.unshift(record);
+    if (firestoreDb) {
+      try {
+        const fichajeDoc = {
+          id: record.id,
+          workerId: worker.id,
+          workerName: worker.fullName,
+          workerDni: worker.dniNie || "",
+          role: worker.category,
+          obraId: project.id,
+          obraName: project.name,
+          date: nowIso.split("T")[0],
+          clockIn: type === "check_in" ? new Date(nowIso).toTimeString().slice(0, 5) : "08:00",
+          clockOut: type === "check_out" ? new Date(nowIso).toTimeString().slice(0, 5) : "",
+          breakMinutes: 0,
+          totalHours: hoursWorked || 0,
+          regularHours: hoursWorked ? Math.min(8, hoursWorked) : 0,
+          overtimeHours: hoursWorked ? Math.max(0, hoursWorked - 8) : 0,
+          hourlyRate: worker.hourlyRate,
+          overtimeRate: Number((worker.hourlyRate * 1.35).toFixed(2)),
+          calculatedCost: calculatedCost || 0,
+          status: type === "check_out" ? "completed" : "active",
+          approvalStatus: "pending",
+          notes: record.notes || "",
+          locationCoords: location ? { latitude: location.latitude, longitude: location.longitude } : void 0,
+          createdAt: nowIso,
+          updatedAt: nowIso
+        };
+        await setDoc(doc(firestoreDb, "fichajes", record.id), fichajeDoc);
+      } catch (fErr) {
+        console.warn("[WorkerPortalService] No se pudo escribir en Firestore fichajes:", fErr);
+      }
+    }
     recordAuditLog(
       worker.id,
       "worker",
@@ -476,7 +781,7 @@ export async function handleTimeRecord(req, res) {
         projectName: project.name,
         hoursWorked,
         calculatedCost,
-        updatedProjectLaborTotal: project.laborCostTotal
+        approvalStatus: "pending"
       },
       worker.id
     );
@@ -488,7 +793,7 @@ export async function handleTimeRecord(req, res) {
         name: project.name,
         laborCostTotal: project.laborCostTotal
       },
-      message: type === "check_in" ? `Entrada registrada con \xE9xito en ${project.name}` : `Salida registrada. ${hoursWorked}h computadas (+${calculatedCost}\u20AC imputados a la obra)`
+      message: type === "check_in" ? `Entrada registrada con \xE9xito en ${project.name}` : `Salida registrada (${hoursWorked}h). Fichaje enviado al Gerente para visto bueno e imputaci\xF3n de costes.`
     });
   } catch (error) {
     console.error("Error al registrar fichaje:", error);
@@ -509,7 +814,7 @@ export async function handleGetWorkerDocuments(req, res) {
   try {
     const workerId = req.query.workerId;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
-    const documents = workerDocumentsDb.filter((doc) => doc.workerId === workerId);
+    const documents = workerDocumentsDb.filter((doc2) => doc2.workerId === workerId);
     return res.json({ documents });
   } catch (error) {
     return res.status(500).json({ error: error.message });
@@ -540,8 +845,10 @@ export async function handleGetWorkerProjects(req, res) {
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
     const worker = workersDb.find((w) => w.id === workerId);
     if (!worker) return res.status(404).json({ error: "Trabajador no encontrado" });
-    const authorized = projectsDb.filter((p) => worker.assignedProjectIds.includes(p.id));
-    return res.json({ projects: authorized });
+    const authorized = projectsDb.filter(
+      (p) => !worker.assignedProjectIds || worker.assignedProjectIds.length === 0 || worker.assignedProjectIds.includes(p.id)
+    );
+    return res.json({ projects: authorized.length > 0 ? authorized : projectsDb });
   } catch (error) {
     return res.status(500).json({ error: error.message });
   }

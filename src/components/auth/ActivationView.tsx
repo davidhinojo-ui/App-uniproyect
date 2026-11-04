@@ -95,7 +95,7 @@ export const ActivationView: React.FC<ActivationViewProps> = ({
         {/* Company Header */}
         <div className="text-center mb-6">
           <span className="text-xs uppercase font-bold tracking-widest text-blue-400">
-            José Real Construcciones, S.L.
+            UniProyect
           </span>
           <h1 className="text-xl sm:text-2xl font-bold text-white mt-1">
             Portal Personal del Trabajador

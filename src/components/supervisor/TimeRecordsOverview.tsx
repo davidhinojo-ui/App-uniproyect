@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TimeRecord, Project, Worker } from '../../types/index.js';
+import { api } from '../../services/api.js';
 import {
   Clock,
   Building,
@@ -11,6 +12,7 @@ import {
   MapPin,
   CheckCircle2,
   Filter,
+  Loader2,
 } from 'lucide-react';
 
 interface TimeRecordsOverviewProps {
@@ -24,9 +26,23 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
   records,
   projects,
   workers,
+  onRefresh,
 }) => {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('all');
   const [selectedWorkerId, setSelectedWorkerId] = useState<string>('all');
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+
+  const handleApprove = async (record: TimeRecord) => {
+    try {
+      setApprovingId(record.id);
+      await api.approveTimeRecord(record.id, { managerName: 'Gerente' });
+      onRefresh();
+    } catch (err: any) {
+      alert('Error al otorgar visto bueno: ' + (err.message || err));
+    } finally {
+      setApprovingId(null);
+    }
+  };
 
   // Filter records
   const filteredRecords = records.filter((r) => {
@@ -152,12 +168,14 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
                 <th className="py-3 px-4">Fecha y Hora</th>
                 <th className="py-3 px-4">Horas / Coste</th>
                 <th className="py-3 px-4">Ubicación / Notas</th>
+                <th className="py-3 px-4 text-center">Visto Bueno Gerente</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-700/50">
               {filteredRecords.map((record) => {
                 const dateObj = new Date(record.timestamp);
                 const isCheckIn = record.type === 'check_in';
+                const isApproved = (record as any).approvalStatus === 'approved';
 
                 return (
                   <tr key={record.id} className="hover:bg-slate-700/30 transition-colors">
@@ -213,6 +231,31 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
                         </span>
                       )}
                       <span className="truncate block text-slate-300 text-[11px]">{record.notes}</span>
+                    </td>
+
+                    <td className="py-3 px-4 text-center">
+                      {isApproved ? (
+                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Aprobado / Imputado</span>
+                        </span>
+                      ) : record.type === 'check_out' ? (
+                        <button
+                          onClick={() => handleApprove(record)}
+                          disabled={approvingId === record.id}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 text-white transition-colors shadow-sm disabled:opacity-50 cursor-pointer"
+                          title="Dar visto bueno del gerente e imputar coste automáticamente a la obra"
+                        >
+                          {approvingId === record.id ? (
+                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                          ) : (
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-300" />
+                          )}
+                          <span>{approvingId === record.id ? 'Imputando...' : 'Dar Visto Bueno'}</span>
+                        </button>
+                      ) : (
+                        <span className="text-slate-500 text-[11px] italic">En jornada</span>
+                      )}
                     </td>
                   </tr>
                 );

@@ -77,7 +77,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
             </div>
             <div>
               <span className="text-[10px] uppercase font-bold tracking-wider text-blue-400 block">
-                José Real Construcciones, S.L.
+                UniProyect · Portal Operario
               </span>
               <h2 className="text-sm font-bold text-white leading-tight truncate max-w-[190px] sm:max-w-none">
                 {worker.fullName}

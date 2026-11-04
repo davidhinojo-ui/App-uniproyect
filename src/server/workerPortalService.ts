@@ -4,7 +4,7 @@ import { Request, Response } from 'express';
 import fs from 'fs';
 import path from 'path';
 import { initializeApp, getApps, getApp } from 'firebase/app';
-import { getFirestore, collection, getDocs, doc, setDoc } from 'firebase/firestore';
+import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from 'firebase/firestore';
 import { Worker, WorkerInvitation, TimeRecord, WorkerDocument, Project, AuditLog } from '../types/index.js';
 
 const ORG_ID = 'org-jose-real';
@@ -674,6 +674,52 @@ export async function handleActivateWorkerPortal(req: Request, res: Response) {
   } catch (error: any) {
     console.error('Error al reactivar portal:', error);
     return res.status(500).json({ error: error.message });
+  }
+}
+
+/**
+ * SUPERVISOR / GERENTE: Delete Worker Card & Access
+ */
+export async function handleDeleteWorker(req: Request, res: Response) {
+  try {
+    const workerId = req.params.id || req.body.workerId;
+    if (!workerId) return res.status(400).json({ error: 'Falta workerId' });
+
+    const idx = workersDb.findIndex((w) => w.id === workerId);
+    if (idx === -1) return res.status(404).json({ error: 'Trabajador no encontrado' });
+
+    const worker = workersDb[idx];
+    workersDb.splice(idx, 1);
+
+    // Invalidate any active invitations
+    for (const [hash, inv] of workerInvitationsMap.entries()) {
+      if (inv.workerId === workerId) {
+        workerInvitationsMap.delete(hash);
+      }
+    }
+
+    // Delete from Firestore 'plantillaTrabajadores' if configured
+    if (firestoreDb) {
+      try {
+        await deleteDoc(doc(firestoreDb, 'plantillaTrabajadores', workerId));
+        console.log(`[WorkerPortalService] Tarjeta de trabajador eliminada de Firestore: ${workerId}`);
+      } catch (fErr) {
+        console.warn('[WorkerPortalService] Error al eliminar de Firestore plantillaTrabajadores:', fErr);
+      }
+    }
+
+    recordAuditLog(
+      'gerente',
+      'supervisor',
+      'WORKER_DELETED',
+      { workerId, fullName: worker.fullName },
+      workerId
+    );
+
+    return res.json({ success: true, message: `Tarjeta de ${worker.fullName} eliminada correctamente`, workerId });
+  } catch (error: any) {
+    console.error('Error al eliminar trabajador:', error);
+    return res.status(500).json({ error: 'Error al eliminar trabajador: ' + error.message });
   }
 }
 

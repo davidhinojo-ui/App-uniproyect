@@ -228,34 +228,74 @@ html[data-theme="light"] .up-management #applet-viewport {
   color: #0F172A !important; /* Deep Slate-900 */
 }
 
-/* Light Mode Header and Navigation Bars */
+/* Light Mode Header and Navigation Bars with High Contrast & Gradients */
 html[data-theme="light"] .up-management header,
 html[data-theme="light"] .up-management #main-branded-header {
-  background-color: #FFFFFF !important;
+  background: linear-gradient(180deg, #FFFFFF 0%, #F8FAFC 100%) !important;
   border-bottom: 1px solid #E2E8F0 !important;
-  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.04) !important;
+  box-shadow: 0 2px 8px -2px rgba(15, 23, 42, 0.05) !important;
 }
 
 html[data-theme="light"] .up-management #navigation-tabs-bar {
-  background-color: #FFFFFF !important;
-  border: 1px solid #E2E8F0 !important;
-  box-shadow: 0 1px 3px 0 rgba(15, 23, 42, 0.03) !important;
+  background: linear-gradient(180deg, #F8FAFC 0%, #FFFFFF 100%) !important;
+  border-top: 1px solid #E2E8F0 !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  box-shadow: 0 2px 4px rgba(15, 23, 42, 0.02) !important;
 }
 
-html[data-theme="light"] .up-management #navigation-tabs-bar button:not(.bg-gradient-to-r) {
-  color: #475569 !important; /* Slate-600 */
+/* Light mode segmented tabs pill container */
+html[data-theme="light"] .up-management #apple-tab-nav {
+  background: linear-gradient(135deg, #F1F5F9 0%, #E2E8F0 100%) !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.05) !important;
+}
+
+/* Inactive tabs text: Ultra-sharp Slate-800 contrast (> 7:1) */
+html[data-theme="light"] .up-management #apple-tab-nav button:not(.bg-gradient-to-r) {
+  color: #1E293B !important;
   font-weight: 700 !important;
+  background-color: transparent !important;
 }
 
-html[data-theme="light"] .up-management #navigation-tabs-bar button:not(.bg-gradient-to-r):hover {
-  background-color: #F1F5F9 !important;
+html[data-theme="light"] .up-management #apple-tab-nav button:not(.bg-gradient-to-r):hover {
+  background-color: #FFFFFF !important;
   color: #0F172A !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08) !important;
 }
 
-html[data-theme="light"] .up-management #navigation-tabs-bar button.bg-gradient-to-r {
-  color: #000000 !important;
-  font-weight: 900 !important;
-  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.3) !important;
+/* Active tab in light mode: rich emerald gradient with pure white text */
+html[data-theme="light"] .up-management #apple-tab-nav button.bg-gradient-to-r:not([title*="operarios"]) {
+  background: linear-gradient(135deg, #059669 0%, #10B981 100%) !important;
+  color: #FFFFFF !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px -2px rgba(16, 185, 129, 0.35) !important;
+}
+
+/* Portal Operario tab: amber gradient with pure black text */
+html[data-theme="light"] .up-management #apple-tab-nav button[title*="operarios"] {
+  background: linear-gradient(135deg, #D97706 0%, #F59E0B 100%) !important;
+  color: #0F172A !important;
+  font-weight: 800 !important;
+  box-shadow: 0 4px 12px -2px rgba(245, 158, 11, 0.35) !important;
+}
+
+
+/* Project focus filter in light mode */
+html[data-theme="light"] .up-management #project-focus-wrap span {
+  color: #1E293B !important;
+  font-weight: 800 !important;
+}
+
+html[data-theme="light"] .up-management #obra-focus-selector {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
+  border: 1px solid #CBD5E1 !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05) !important;
+}
+
+html[data-theme="light"] .up-management #obra-focus-selector option {
+  background-color: #FFFFFF !important;
+  color: #0F172A !important;
 }
 
 /* Headings in Light Mode */
@@ -805,22 +845,6 @@ html[data-theme="light"] .up-management #kpi-dashboard-grid > div {
   box-shadow: 0 4px 16px -2px rgba(15, 23, 42, 0.04), 0 1px 3px rgba(15, 23, 42, 0.02) !important;
 }
 
-html[data-theme="light"] .up-management #guided-experience-panel {
-  background: linear-gradient(135deg, #f0fdf4 0%, #ecfdf5 50%, #ffffff 100%) !important;
-  border: 1px solid #a7f3d0 !important;
-  box-shadow: 0 4px 16px -2px rgba(16, 185, 129, 0.06) !important;
-}
-
-html[data-theme="light"] .up-management #guided-experience-panel button {
-  background: linear-gradient(145deg, #ffffff 0%, #f8fafc 100%) !important;
-  border: 1px solid #cbd5e1 !important;
-}
-
-html[data-theme="light"] .up-management #guided-experience-panel button:hover {
-  background: linear-gradient(145deg, #ecfdf5 0%, #f0fdf4 100%) !important;
-  border-color: #059669 !important;
-}
-
 html[data-theme="light"] .up-management #notifications-panel-container {
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%) !important;
   border: 1px solid #cbd5e1 !important;
@@ -850,9 +874,5 @@ html[data-theme="dark"] .up-management #navigation-tabs-bar {
 html[data-theme="dark"] .up-management #company-header-container,
 html[data-theme="dark"] .up-management #kpi-dashboard-grid > div {
   background: linear-gradient(145deg, #131317 0%, #0d0d10 100%) !important;
-}
-
-html[data-theme="dark"] .up-management #guided-experience-panel {
-  background: linear-gradient(135deg, rgba(6, 78, 59, 0.18) 0%, #111114 70%) !important;
 }
 

@@ -23,6 +23,7 @@ import {
   handleWorkerLogin,
   handleRevokeWorker,
   handleActivateWorkerPortal,
+  handleDeleteWorker,
   handleApproveTimeRecord,
   handleTimeRecord,
   handleGetWorkerTimeRecords,
@@ -579,6 +580,9 @@ app.post('/api/supervisor/time-records/:id/approve', handleApproveTimeRecord);
 app.post('/api/supervisor/workers/:id/revoke-portal', handleRevokeWorker);
 app.delete('/api/supervisor/workers/:id/portal', handleRevokeWorker);
 app.post('/api/supervisor/workers/:id/activate-portal', handleActivateWorkerPortal);
+
+// Borrado definitivo de tarjeta de trabajador
+app.delete('/api/supervisor/workers/:id', handleDeleteWorker);
 
 app.get('/api/supervisor/audit-logs', (req, res) => {
   res.json({ logs: auditLogsDb });

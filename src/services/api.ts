@@ -45,15 +45,52 @@ export const api = {
     return data;
   },
 
+  async deleteWorker(id: string): Promise<void> {
+    const res = await fetch(`${API_BASE}/supervisor/workers/${id}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al eliminar trabajador');
+  },
+
   // SUPERVISOR: Revoke
   async revokeWorker(workerId: string, reason?: string): Promise<void> {
-    const res = await fetch(`${API_BASE}/worker-portal/revoke`, {
+    const res = await fetch(`${API_BASE}/supervisor/workers/${workerId}/revoke-portal`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ workerId, reason }),
     });
     const data = await res.json();
-    if (!res.ok) throw new Error(data.error || 'Error al revocar acceso');
+    if (!res.ok) throw new Error(data.error || 'Error al revocar acceso al portal');
+  },
+
+  async revokePortal(workerId: string, reason?: string): Promise<void> {
+    return this.revokeWorker(workerId, reason);
+  },
+
+  async activatePortal(workerId: string): Promise<Worker> {
+    const res = await fetch(`${API_BASE}/supervisor/workers/${workerId}/activate-portal`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ workerId }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al reactivar portal');
+    return data.worker;
+  },
+
+  async approveTimeRecord(
+    recordId: string,
+    options?: { managerName?: string; notes?: string; signature?: string }
+  ): Promise<any> {
+    const res = await fetch(`${API_BASE}/supervisor/time-records/${recordId}/approve`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(options || {}),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Error al dar visto bueno al fichaje');
+    return data;
   },
 
   // WORKER: Verify Token

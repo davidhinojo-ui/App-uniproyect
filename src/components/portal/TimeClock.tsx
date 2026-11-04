@@ -129,10 +129,13 @@ export const TimeClock: React.FC<TimeClockProps> = ({
     }
   };
 
-  // Filter projects strictly to authorized projects
+  // Strictly registered projects (fall back to all registered projects if no restrictions)
   const authorizedProjects = projects.filter((p) =>
-    worker.assignedProjectIds.includes(p.id)
+    worker.assignedProjectIds && worker.assignedProjectIds.length > 0
+      ? worker.assignedProjectIds.includes(p.id)
+      : true
   );
+  const availableProjects = authorizedProjects.length > 0 ? authorizedProjects : projects;
 
   const activeProjectName = projects.find((p) => p.id === latestRecord?.projectId)?.name;
 
@@ -202,14 +205,14 @@ export const TimeClock: React.FC<TimeClockProps> = ({
             <Building className="w-4 h-4 text-blue-400" />
             Selecciona la Obra Autorizada:
           </label>
-          {authorizedProjects.length > 0 ? (
+          {availableProjects.length > 0 ? (
             <select
               value={selectedProjectId}
               disabled={isCurrentlyCheckedIn}
               onChange={(e) => setSelectedProjectId(e.target.value)}
               className="w-full px-4 py-3 bg-slate-800 border border-slate-700 rounded-2xl text-white font-medium text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-60 cursor-pointer"
             >
-              {authorizedProjects.map((p) => (
+              {availableProjects.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.name} — ({p.code})
                 </option>
@@ -217,7 +220,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
             </select>
           ) : (
             <div className="p-3 bg-amber-500/10 text-amber-300 border border-amber-500/20 rounded-xl text-xs">
-              No tienes ninguna obra asignada en este momento. Contacta con tu supervisor.
+              No hay obras registradas en el sistema. Contacta con el Gerente.
             </div>
           )}
         </div>

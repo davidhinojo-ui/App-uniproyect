@@ -50,7 +50,7 @@ export const WorkerLogin: React.FC<WorkerLoginProps> = ({
       <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl relative">
         <div className="text-center mb-6">
           <span className="text-xs uppercase font-bold tracking-widest text-blue-400">
-            José Real Construcciones, S.L.
+            UniProyect
           </span>
           <h1 className="text-xl sm:text-2xl font-bold text-white mt-1">
             Portal del Trabajador

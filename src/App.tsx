@@ -39,26 +39,6 @@ export const App: React.FC = () => {
   const [activeWorker, setActiveWorker] = useState<Worker | null>(null);
   const [supervisorTab, setSupervisorTab] = useState<SupervisorTab>('workers');
 
-  // Experience Mode: 'guided' (Vista Guiada) vs 'complete' (Vista Completa)
-  const [viewExperience, setViewExperience] = useState<ViewExperience>(() => {
-    try {
-      const saved = localStorage.getItem(VIEW_STORAGE_KEY);
-      if (saved === 'guided' || saved === 'complete') return saved;
-      // Default to guided on mobile screens
-      return window.innerWidth < 768 ? 'guided' : 'complete';
-    } catch {
-      return 'guided';
-    }
-  });
-
-  const handleToggleViewExperience = (mode: ViewExperience) => {
-    setViewExperience(mode);
-    try {
-      localStorage.setItem(VIEW_STORAGE_KEY, mode);
-    } catch {
-      // storage unavailable
-    }
-  };
 
   // Modals for Guided actions
   const [isAssistedClockOpen, setIsAssistedClockOpen] = useState(false);
@@ -69,25 +49,54 @@ export const App: React.FC = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const [records, setRecords] = useState<TimeRecord[]>([]);
   const [loading, setLoading] = useState(true);
+  const [pendingWorkerId, setPendingWorkerId] = useState<string | null>(null);
+  const [revokedWorkerNotice, setRevokedWorkerNotice] = useState<string | null>(null);
 
-  // Check Hash / Query URL parameters for QR activation
+  // Check Hash / Query URL parameters for direct worker portal or QR scan
   useEffect(() => {
     const parseUrl = () => {
       const hash = window.location.hash;
       const search = window.location.search;
 
-      let tokenFound: string | null = null;
-      if (hash.includes('token=')) {
-        const match = hash.match(/token=([A-Za-z0-9_-]+)/);
-        if (match) tokenFound = match[1];
-      } else if (search.includes('token=')) {
+      let workerIdFound: string | null = null;
+      if (hash.includes('w=')) {
+        const match = hash.match(/w=([^&]+)/);
+        if (match) workerIdFound = decodeURIComponent(match[1]);
+      } else if (search.includes('w=')) {
         const params = new URLSearchParams(search);
-        tokenFound = params.get('token');
+        workerIdFound = params.get('w');
       }
 
-      if (tokenFound) {
-        setRouteToken(tokenFound);
+      if (!workerIdFound) {
+        if (hash.includes('workerId=')) {
+          const match = hash.match(/workerId=([^&]+)/);
+          if (match) workerIdFound = decodeURIComponent(match[1]);
+        } else if (search.includes('workerId=')) {
+          const params = new URLSearchParams(search);
+          workerIdFound = params.get('workerId');
+        }
+      }
+
+      if (workerIdFound) {
+        setPendingWorkerId(workerIdFound);
+        setRouteToken(null);
         setIsLoginView(false);
+      } else if (hash.includes('portal') && !activeWorker) {
+        const savedWorkerId = localStorage.getItem('uniproyect_worker_id');
+        if (savedWorkerId) setPendingWorkerId(savedWorkerId);
+      } else if (hash.includes('token=') || search.includes('token=')) {
+        let tokenFound: string | null = null;
+        if (hash.includes('token=')) {
+          const match = hash.match(/token=([A-Za-z0-9_-]+)/);
+          if (match) tokenFound = match[1];
+        } else if (search.includes('token=')) {
+          const params = new URLSearchParams(search);
+          tokenFound = params.get('token');
+        }
+        if (tokenFound) {
+          setRouteToken(tokenFound);
+          setIsLoginView(false);
+        }
       } else if (hash.includes('login-operario')) {
         setIsLoginView(true);
         setRouteToken(null);
@@ -100,7 +109,7 @@ export const App: React.FC = () => {
     parseUrl();
     window.addEventListener('hashchange', parseUrl);
     return () => window.removeEventListener('hashchange', parseUrl);
-  }, []);
+  }, [activeWorker]);
 
   // Fetch initial supervisor data
   const fetchData = async () => {
@@ -173,6 +182,25 @@ export const App: React.FC = () => {
     }
   };
 
+  // Auto-connect worker from QR code or direct link
+  useEffect(() => {
+    if (pendingWorkerId && workers.length > 0) {
+      const match = workers.find((w) => w.id === pendingWorkerId);
+      if (match) {
+        if (match.status === 'revoked') {
+          setRevokedWorkerNotice(match.fullName);
+          setActiveWorker(null);
+        } else {
+          setActiveWorker(match);
+          setRevokedWorkerNotice(null);
+          try {
+            localStorage.setItem('uniproyect_worker_id', match.id);
+          } catch (_) {}
+        }
+      }
+    }
+  }, [pendingWorkerId, workers]);
+
   // Handler for QR Activation completed
   const handleWorkerActivated = (worker: Worker) => {
     setActiveWorker(worker);
@@ -189,12 +217,49 @@ export const App: React.FC = () => {
   // Handler for logout
   const handleWorkerLogout = () => {
     setActiveWorker(null);
+    setPendingWorkerId(null);
     setIsLoginView(false);
+    try {
+      localStorage.removeItem('uniproyect_worker_id');
+    } catch (_) {}
     window.location.hash = '';
     fetchData();
   };
 
-  // 1. RENDER ACTIVATION VIEW (QR scan target)
+  // 0. RENDER REVOCATION NOTICE (If designated worker's portal was deleted/revoked)
+  if (revokedWorkerNotice) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4">
+        <div className="max-w-md w-full bg-slate-900 border border-rose-500/30 rounded-3xl p-6 text-center shadow-2xl space-y-4">
+          <div className="w-16 h-16 rounded-2xl bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400 mx-auto">
+            <ShieldCheck className="w-8 h-8" />
+          </div>
+          <h2 className="text-xl font-bold text-white">Portal Desactivado</h2>
+          <p className="text-sm text-slate-300">
+            El acceso al portal de trabajo para <strong className="text-rose-300">{revokedWorkerNotice}</strong> ha sido revocado o eliminado por el Gerente de Obra.
+          </p>
+          <p className="text-xs text-slate-500">
+            Si se trata de un error o requiere reactivación, contacte con administración o la dirección de obra de José Real Construcciones, S.L.
+          </p>
+          <button
+            onClick={() => {
+              setRevokedWorkerNotice(null);
+              setPendingWorkerId(null);
+              try {
+                localStorage.removeItem('uniproyect_worker_id');
+              } catch (_) {}
+              window.location.hash = '';
+            }}
+            className="w-full py-2.5 px-4 bg-slate-800 hover:bg-slate-700 text-white font-medium rounded-xl text-xs transition-colors cursor-pointer"
+          >
+            Volver a Selección / Panel
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 1. RENDER ACTIVATION VIEW (QR scan target without direct worker ID)
   if (routeToken) {
     return (
       <ActivationView
@@ -271,7 +336,7 @@ export const App: React.FC = () => {
                   UniProyect
                 </span>
                 <span className="text-[11px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                  José Real Construcciones, S.L.
+                  Control de Obras
                 </span>
               </div>
               <h1 className="text-base sm:text-lg font-bold text-white leading-tight">
@@ -280,43 +345,8 @@ export const App: React.FC = () => {
             </div>
           </div>
 
-          {/* Quick Controls: Experience Selector «Guiada / Completa» + Fast Actions */}
+          {/* Quick Controls: Fast Actions */}
           <div className="flex items-center flex-wrap gap-2.5">
-            {/* SELECTOR ACCESIBLE «Guiada / Completa» */}
-            <div
-              className="inline-flex p-1 bg-slate-800/90 border border-slate-700 rounded-2xl shadow-inner"
-              role="group"
-              aria-label="Modalidad de visualización: Guiada o Completa"
-            >
-              <button
-                type="button"
-                aria-pressed={viewExperience === 'guided'}
-                onClick={() => handleToggleViewExperience('guided')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  viewExperience === 'guided'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <Compass className="w-3.5 h-3.5" />
-                <span>Vista Guiada</span>
-              </button>
-
-              <button
-                type="button"
-                aria-pressed={viewExperience === 'complete'}
-                onClick={() => handleToggleViewExperience('complete')}
-                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                  viewExperience === 'complete'
-                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                <LayoutGrid className="w-3.5 h-3.5" />
-                <span>Vista Completa</span>
-              </button>
-            </div>
-
             <button
               onClick={() => setIsLoginView(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
@@ -407,98 +437,48 @@ export const App: React.FC = () => {
 
       {/* Main Supervisor Content */}
       <main className="flex-1 up-workspace mx-auto w-full p-4 sm:p-8 space-y-8">
-        {/* EXPERIENCIA GUIADA: Hero con ACCIONES RÁPIDAS GUIADAS */}
-        {viewExperience === 'guided' && (
-          <div className="space-y-6">
-            <QuickGuidedActions
-              workers={workers}
-              projects={projects}
-              records={records}
-              onOpenClockIn={() => setIsAssistedClockOpen(true)}
-              onOpenQrGenerator={handleQuickGenerateQr}
-              onNavigateToTab={(tab) => {
-                setSupervisorTab(tab);
-                handleToggleViewExperience('complete');
-              }}
-              onOpenWorkerPortalLogin={() => setIsLoginView(true)}
-            />
+        {supervisorTab === 'workers' && (
+          <WorkerManagement
+            workers={workers}
+            projects={projects}
+            onRefresh={fetchData}
+            onSelectWorkerForPreview={handleSelectWorkerForPreview}
+          />
+        )}
 
-            {/* In Vista Guiada, also display the focused Control Horario view */}
-            <div className="pt-4 border-t border-slate-800">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
-                <div>
-                  <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-400" /> Control Horario y Registro de Jornadas
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Últimas entradas y salidas registradas en las obras de José Real Construcciones, S.L.
-                  </p>
-                </div>
-                <button
-                  onClick={() => setIsAssistedClockOpen(true)}
-                  className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
-                >
-                  + Fichar en Obra
-                </button>
+        {supervisorTab === 'timerecords' && (
+          <div className="space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <div>
+                <h2 className="text-xl font-bold text-white">
+                  Control Horario y Registro de Jornadas
+                </h2>
+                <p className="text-xs text-slate-400">
+                  Monitorización en tiempo real de entradas, salidas y cómputo de horas por obra.
+                </p>
               </div>
-
-              <TimeRecordsOverview
-                records={records}
-                projects={projects}
-                workers={workers}
-                onRefresh={fetchData}
-              />
+              <button
+                onClick={() => setIsAssistedClockOpen(true)}
+                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
+              >
+                + Fichar en Obra
+              </button>
             </div>
+
+            <TimeRecordsOverview
+              records={records}
+              projects={projects}
+              workers={workers}
+              onRefresh={fetchData}
+            />
           </div>
         )}
 
-        {/* EXPERIENCIA COMPLETA: Muestra la pestaña seleccionada */}
-        {viewExperience === 'complete' && (
-          <>
-            {supervisorTab === 'workers' && (
-              <WorkerManagement
-                workers={workers}
-                projects={projects}
-                onRefresh={fetchData}
-                onSelectWorkerForPreview={handleSelectWorkerForPreview}
-              />
-            )}
-
-            {supervisorTab === 'timerecords' && (
-              <div className="space-y-4">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                  <div>
-                    <h2 className="text-xl font-bold text-white">
-                      Control Horario y Registro de Jornadas
-                    </h2>
-                    <p className="text-xs text-slate-400">
-                      Monitorización en tiempo real de entradas, salidas y cómputo de horas por obra.
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => setIsAssistedClockOpen(true)}
-                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-emerald-600/20 cursor-pointer"
-                  >
-                    + Fichar en Obra
-                  </button>
-                </div>
-
-                <TimeRecordsOverview
-                  records={records}
-                  projects={projects}
-                  workers={workers}
-                  onRefresh={fetchData}
-                />
-              </div>
-            )}
-
-            {supervisorTab === 'laborcosts' && (
-              <ProjectLaborCosts projects={projects} records={records} />
-            )}
-
-            {supervisorTab === 'security' && <SecurityAuditTab />}
-          </>
+        {supervisorTab === 'laborcosts' && (
+          <ProjectLaborCosts projects={projects} records={records} />
         )}
+
+        {supervisorTab === 'security' && <SecurityAuditTab />}
       </main>
 
       {/* Guided Assisted Clock-In Modal */}

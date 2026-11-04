@@ -227,6 +227,28 @@ html[data-theme="light"] button.bg-amber-600 .text-white {
   color: #ffffff !important;
 }
 
+/* Light mode for top areas navigation bar */
+html[data-theme="light"] nav[aria-label="Áreas de UniProyect"] {
+  background: linear-gradient(90deg, #f8fafc 0%, #ffffff 50%, #f8fafc 100%) !important;
+  border-bottom: 1px solid #cbd5e1 !important;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.05) !important;
+}
+
+html[data-theme="light"] nav[aria-label="Áreas de UniProyect"] a:not(.bg-blue-600) {
+  background-color: #f1f5f9 !important;
+  color: #334155 !important;
+  border: 1px solid #cbd5e1 !important;
+}
+
+html[data-theme="light"] nav[aria-label="Áreas de UniProyect"] a:not(.bg-blue-600):hover {
+  background-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+html[data-theme="light"] nav[aria-label="Áreas de UniProyect"] span {
+  color: #334155 !important;
+}
+
 @media (max-width: 640px) {
   .uniproyect-theme-switch {
     right: max(12px, env(safe-area-inset-right));

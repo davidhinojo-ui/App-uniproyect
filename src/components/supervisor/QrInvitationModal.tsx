@@ -54,7 +54,7 @@ export const QrInvitationModal: React.FC<QrInvitationModalProps> = ({
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-800/60 print:bg-white print:border-b-2 print:border-black">
           <div>
             <span className="text-xs uppercase font-bold tracking-wider text-blue-400 print:text-blue-700">
-              José Real Construcciones, S.L.
+              UniProyect
             </span>
             <h3 className="text-lg font-bold text-white print:text-black">
               Acceso Individual al Portal

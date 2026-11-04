@@ -14,6 +14,9 @@ import {
   ExternalLink,
   Shield,
   Loader2,
+  Trash2,
+  Copy,
+  Check,
 } from 'lucide-react';
 
 interface WorkerManagementProps {
@@ -78,6 +81,62 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
     } catch (err: any) {
       alert('Error al actualizar estado: ' + err.message);
     }
+  };
+
+  // Delete worker card permanently
+  const handleDeleteWorkerCard = async (worker: Worker) => {
+    const confirmMsg = `¿Seguro que desea borrar la tarjeta de ${worker.fullName}? Esta acción eliminará su ficha y revocará sus accesos de forma permanente.`;
+    if (!confirm(confirmMsg)) return;
+
+    try {
+      setLoadingWorkerId(worker.id);
+      await api.deleteWorker(worker.id);
+      onRefresh();
+    } catch (err: any) {
+      alert('Error al borrar la tarjeta del trabajador: ' + err.message);
+    } finally {
+      setLoadingWorkerId(null);
+    }
+  };
+
+  // Revoke/Eliminate portal for designated worker
+  const handleRevokePortal = async (worker: Worker) => {
+    if (!confirm(`¿Desea eliminar/revocar el portal de ${worker.fullName}? No podrá acceder ni fichar hasta que vuelva a ser reactivado.`)) return;
+    try {
+      setLoadingWorkerId(worker.id);
+      await api.revokePortal(worker.id, 'Portal eliminado por el Gerente');
+      onRefresh();
+    } catch (err: any) {
+      alert('Error al revocar portal: ' + err.message);
+    } finally {
+      setLoadingWorkerId(null);
+    }
+  };
+
+  // Reactivate portal for worker
+  const handleActivatePortal = async (worker: Worker) => {
+    try {
+      setLoadingWorkerId(worker.id);
+      await api.activatePortal(worker.id);
+      onRefresh();
+    } catch (err: any) {
+      alert('Error al reactivar portal: ' + err.message);
+    } finally {
+      setLoadingWorkerId(null);
+    }
+  };
+
+  // Copy direct portal link to clipboard
+  const [copiedWorkerId, setCopiedWorkerId] = useState<string | null>(null);
+  const handleCopyDirectLink = (workerId: string) => {
+    const origin = window.location.origin;
+    const url = `${origin}/#portal?w=${encodeURIComponent(workerId)}`;
+    navigator.clipboard.writeText(url).then(() => {
+      setCopiedWorkerId(workerId);
+      setTimeout(() => setCopiedWorkerId(null), 2000);
+    }).catch(() => {
+      prompt('Enlace directo al portal del trabajador:', url);
+    });
   };
 
   // Create Worker submission
@@ -241,57 +300,85 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
               </div>
 
               {/* Action buttons */}
-              <div className="mt-5 pt-4 border-t border-slate-700/60 space-y-2">
-                <button
-                  onClick={() => handleGenerateQr(worker.id)}
-                  disabled={isLoadingThis || worker.status === 'revoked'}
-                  className="w-full flex items-center justify-center gap-2 px-3 py-2.5 bg-blue-600/90 hover:bg-blue-600 text-white font-medium rounded-xl text-xs transition-colors shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isLoadingThis ? (
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  ) : (
-                    <QrCode className="w-4 h-4" />
-                  )}
-                  {worker.activationCount > 0 ? 'Regenerar Acceso QR' : 'Crear Acceso al Portal (QR)'}
-                </button>
+              <div className="mt-5 pt-4 border-t border-slate-700/60 space-y-2.5">
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => handleGenerateQr(worker.id)}
+                    disabled={isLoadingThis || worker.status === 'revoked'}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl text-xs transition-colors shadow-md shadow-blue-500/10 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+                    title="Generar código QR para escanear y acceder al portal"
+                  >
+                    {isLoadingThis ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <QrCode className="w-3.5 h-3.5" />
+                    )}
+                    <span>{worker.activationCount > 0 ? 'Ver QR' : 'Crear QR'}</span>
+                  </button>
 
-                <div className="flex items-center justify-between gap-2 pt-1 text-xs">
+                  <button
+                    onClick={() => handleCopyDirectLink(worker.id)}
+                    className="flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 font-medium rounded-xl text-xs transition-colors cursor-pointer"
+                    title="Copiar enlace directo al portal para enviar por WhatsApp o abrir en el navegador"
+                  >
+                    {copiedWorkerId === worker.id ? (
+                      <>
+                        <Check className="w-3.5 h-3.5 text-emerald-400" />
+                        <span className="text-emerald-400">¡Copiado!</span>
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="w-3.5 h-3.5" />
+                        <span>Enlace Portal</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs">
                   {onSelectWorkerForPreview && (
                     <button
                       onClick={() => onSelectWorkerForPreview(worker)}
-                      className="text-slate-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors"
-                      title="Abrir vista previa del portal de este trabajador"
+                      className="text-slate-400 hover:text-blue-300 font-medium flex items-center gap-1 transition-colors cursor-pointer"
+                      title="Probar portal de este trabajador en pantalla"
                     >
                       <ExternalLink className="w-3.5 h-3.5" />
-                      Probar Portal
+                      Probar
                     </button>
                   )}
 
-                  <div className="flex gap-2 ml-auto">
-                    {worker.status === 'active' ? (
+                  <div className="flex items-center gap-2.5 ml-auto">
+                    {/* Toggle Portal Elimination / Reactivation */}
+                    {worker.status === 'revoked' ? (
                       <button
-                        onClick={() => handleToggleStatus(worker, 'suspended')}
-                        className="text-amber-400 hover:text-amber-300 hover:underline"
+                        onClick={() => handleActivatePortal(worker)}
+                        disabled={isLoadingThis}
+                        className="text-emerald-400 hover:text-emerald-300 hover:underline font-medium cursor-pointer"
+                        title="Reactivar portal de este trabajador"
                       >
-                        Suspender
+                        Reactivar Portal
                       </button>
-                    ) : worker.status === 'suspended' ? (
+                    ) : (
                       <button
-                        onClick={() => handleToggleStatus(worker, 'active')}
-                        className="text-emerald-400 hover:text-emerald-300 hover:underline"
+                        onClick={() => handleRevokePortal(worker)}
+                        disabled={isLoadingThis}
+                        className="text-amber-400 hover:text-amber-300 hover:underline font-medium cursor-pointer"
+                        title="Eliminar o revocar el portal para este trabajador"
                       >
-                        Reactivar
-                      </button>
-                    ) : null}
-
-                    {worker.status !== 'revoked' && (
-                      <button
-                        onClick={() => handleToggleStatus(worker, 'revoked')}
-                        className="text-rose-400 hover:text-rose-300 hover:underline"
-                      >
-                        Revocar
+                        Eliminar Portal
                       </button>
                     )}
+
+                    {/* Delete Worker Card Button */}
+                    <button
+                      onClick={() => handleDeleteWorkerCard(worker)}
+                      disabled={isLoadingThis}
+                      className="inline-flex items-center gap-1 text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-2 py-1 rounded-lg font-medium transition-colors cursor-pointer border border-rose-500/20"
+                      title="Borrar definitivamente la tarjeta de este trabajador"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Borrar Tarjeta</span>
+                    </button>
                   </div>
                 </div>
               </div>
