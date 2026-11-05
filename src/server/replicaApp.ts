@@ -7,6 +7,7 @@ import { createPortalService } from './replicaPortalService.js';
 import { createStore } from './replicaStore.js';
 import { hashToken, publicWorker } from './replicaSecurity.js';
 import type { DocumentWrite } from './replicaState.js';
+import { isValidHourlyRate } from './workerRates.js';
 dotenv.config();
 export function createReplicaApp(storeFactory: typeof createStore = createStore) {
 const app=express();
@@ -65,13 +66,17 @@ app.use(async (req,res,next)=>{
           ...project, location:project.address, description:project.client,
         }});
       }
-      if(profile && result.status<400 && /^\/api\/supervisor\/workers(?:\/[^/]+)?$/.test(req.path) && ['POST','PUT'].includes(req.method)) {
+      if(profile && result.status<400 && /^\/api\/supervisor\/workers(?:\/[^/]+)?$/.test(req.path) && ['POST','PUT','PATCH'].includes(req.method)) {
         const worker = result.body.worker;
         if(worker) {
           const previous = management.plantillaTrabajadores?.find(item=>item.id===worker.id) || {};
           writes.push({ collection:'plantillaTrabajadores', id:worker.id, action:'set', data:{
             ...previous, id:worker.id, name:worker.fullName, dni:worker.dniNie, role:worker.category,
-            standardHourlyRate:worker.hourlyRate, phone:worker.phone || '', email:worker.email || '',
+            standardHourlyRate:worker.hourlyRate, hourlyRate:worker.hourlyRate,
+            dailyRate:Math.round(worker.hourlyRate * 8),
+            overtimeHourlyRate:req.body.hourlyRate !== undefined || previous.overtimeHourlyRate == null ? Number((worker.hourlyRate * 1.35).toFixed(2)) : previous.overtimeHourlyRate,
+            phone:worker.phone || '', email:worker.email || '',
+            updatedAt:worker.updatedAt,
             active:previous.active ?? true,
           }});
         }
@@ -135,6 +140,7 @@ app.post('/api/supervisor/workers', (req, res) => {
     if (!fullName || !category || !hourlyRate) {
       return res.status(400).json({ error: 'Faltan campos requeridos (nombre, categoría, coste/hora)' });
     }
+    if (!isValidHourlyRate(hourlyRate)) return res.status(400).json({ error: 'Introduce un coste por hora válido mayor que cero.' });
 
     const newWorker = {
       id: `w-${crypto.randomUUID()}`,
@@ -162,13 +168,15 @@ app.post('/api/supervisor/workers', (req, res) => {
   }
 });
 
-app.put('/api/supervisor/workers/:id', (req, res) => {
+const handleUpdateWorker = (req: Request, res: Response) => {
   try {
     const worker = workersDb.find((w) => w.id === req.params.id);
     if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
 
-    const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone } = req.body;
+    const { fullName, dniNie, category, hourlyRate, assignedProjectIds, status, email, phone } = req.body;
+    if (hourlyRate !== undefined && !isValidHourlyRate(hourlyRate)) return res.status(400).json({ error: 'Introduce un coste por hora válido mayor que cero.' });
     if (fullName) worker.fullName = fullName;
+    if (dniNie !== undefined) worker.dniNie = String(dniNie).trim().toUpperCase();
     if (category) worker.category = category;
     if (hourlyRate !== undefined) worker.hourlyRate = Number(hourlyRate);
     if (assignedProjectIds) worker.assignedProjectIds = assignedProjectIds;
@@ -183,7 +191,9 @@ app.put('/api/supervisor/workers/:id', (req, res) => {
   } catch (err: any) {
     res.status(500).json({ error: err.message });
   }
-});
+};
+app.put('/api/supervisor/workers/:id', handleUpdateWorker);
+app.patch('/api/supervisor/workers/:id', handleUpdateWorker);
 
 app.get('/api/supervisor/projects', (req, res) => {
   res.json({ projects: projectsDb });

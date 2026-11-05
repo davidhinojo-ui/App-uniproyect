@@ -4,7 +4,7 @@ Preparación del 5 de noviembre de 2026. No se ha desplegado, fusionado ni modif
 
 ## Qué se conserva
 
-Se parte de los mismos 88 archivos del ZIP «uniproyect (ok)», iguales a `main` en `f54e90a`, y de la corrección de jornadas del PR de sincronización. Se mantienen las pantallas, estilos, temas, obras, gastos, personal, documentos, OCR local, análisis Gemini, exportaciones PDF/Excel, copias, Gmail/Drive, Vista Guiada/Completa, seis Acciones Rápidas, QR y Control Horario. Se añade una pantalla de acceso para proteger los datos. No se afirma que todos los proveedores estén ya configurados o validados con cuentas reales.
+La base inicial fueron los 88 archivos del primer ZIP «uniproyect (ok)», iguales a `main` en `f54e90a`, y la corrección de jornadas del PR de sincronización. Después se incorporó el ZIP del Escritorio con ocho archivos modificados y nuevas tarifas; ver [detalle y hash de la actualización](ZIP_UPDATE_2026-11-05.md). Se mantienen las pantallas, estilos, temas, obras, gastos, personal, documentos, OCR local, análisis Gemini, exportaciones PDF/Excel, copias, Gmail/Drive, Vista Guiada/Completa, seis Acciones Rápidas, QR y Control Horario. Se añade una pantalla de acceso para proteger los datos. No se afirma que todos los proveedores estén ya configurados o validados con cuentas reales.
 
 La capa de compatibilidad conserva las formas de los documentos y los identificadores anteriores. Los nombres `firebase.ts`, `setDoc`, `onSnapshot` y `firebaseAuthUid` se conservan en algunos adaptadores/campos por compatibilidad; el recorrido de la réplica usa Supabase y no inicializa Firebase. El código original de servidor permanece como referencia y no es el punto de entrada de Vercel ni de los comandos por defecto.
 
@@ -62,7 +62,7 @@ Con `--write` guarda operaciones en `migration-private/import.json`, excluido de
 
 ## Comprobaciones y límites
 
-- TypeScript y build de la réplica correctos. Las 41 pruebas de la suite completa validan la API, QR, PIN, aislamiento, jornada, aprobación sin duplicar costes, conflicto de revisión, reinicio y revocación usando almacenamiento simulado. Las pruebas HTTP arrancan sin `.env` ni Firebase original.
+- TypeScript y build de la réplica correctos. Las 45 pruebas de la suite completa validan la API, QR, PIN, aislamiento, jornada, aprobación sin duplicar costes, conflicto de revisión, reinicio y revocación usando almacenamiento simulado. Las pruebas HTTP arrancan sin `.env` ni Firebase original.
 - En la base Supabase real se probaron escritura/lectura de la organización, rechazo de otra organización y de identidad sin perfil, ausencia de privilegios públicos sobre el portal, persistencia y rechazo de revisión obsoleta. Los datos de prueba se revirtieron con `ROLLBACK`.
 - Pantalla de acceso comprobada en navegador local. Las pantallas de gestión también se renderizan en pruebas a 390, 820 y 1920 px en ambos temas; esas pruebas no sustituyen una comparación visual completa de todas las pantallas.
 - El PR de sincronización pasó CI de GitHub. La rama de réplica tiene comprobación independiente en su PR.

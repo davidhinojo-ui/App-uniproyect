@@ -5,6 +5,7 @@ import { Request, Response } from 'express';
 import { Worker, WorkerInvitation, TimeRecord, WorkerDocument, Project, AuditLog } from '../types/index.js';
 import type { PortalState, DocumentWrite } from './replicaState.js';
 import { hashPin, verifyPin } from './replicaSecurity.js';
+import { resolveWorkerHourlyRate } from './workerRates.js';
 export function createPortalService(state: PortalState, writes: DocumentWrite[], management: Record<string, any[]>) {
   const collection = (_db: unknown, name: string) => name;
   const doc = (_db: unknown, collection: string, id: string) => ({ collection, id });
@@ -68,7 +69,7 @@ async function syncFromFirestore(): Promise<void> {
       workersDb.length = 0;
       workersSnap.forEach((d) => {
         const data = d.data();
-        const stdRate = Number(data.standardHourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : 14.0);
+        const stdRate = resolveWorkerHourlyRate(data, d.id);
         workersDb.push({
           ...previousWorkers.get(d.id),
           id: d.id,
@@ -543,7 +544,7 @@ async function handleApproveTimeRecord(req: Request, res: Response) {
     }
 
     const worker = workersDb.find((w) => w.id === record.workerId);
-    const hourlyRate = record.hourlyRate ?? worker?.hourlyRate ?? 14.0;
+    const hourlyRate = record.hourlyRate ?? resolveWorkerHourlyRate(worker ?? {}, record.workerId);
     const hours = record.hoursWorked;
     const totalCost = Number((record.calculatedCost ?? (hours * hourlyRate)).toFixed(2));
     const nowIso = new Date().toISOString();
@@ -672,9 +673,11 @@ async function handleTimeRecord(req: Request, res: Response) {
 
     const shift = validateShift(timeRecordsDb, worker.id, projectId, type, nowIso);
     if ('error' in shift) return res.status(409).json({ error: shift.error });
+    const openEntry = type === 'check_out' ? timeRecordsDb.find(item => item.workerId === worker.id && item.projectId === project.id && item.type === 'check_in') : undefined;
+    const shiftRate = openEntry?.hourlyRate ?? worker.hourlyRate;
     hoursWorked = shift.hoursWorked;
     if (type === 'check_out') {
-      calculatedCost = Number(((hoursWorked ?? 0) * worker.hourlyRate).toFixed(2));
+      calculatedCost = Number(((hoursWorked ?? 0) * shiftRate).toFixed(2));
     }
     const record: TimeRecord = {
       id: `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
@@ -689,7 +692,7 @@ async function handleTimeRecord(req: Request, res: Response) {
       location,
       notes: notes || (type === 'check_in' ? 'Entrada registrada en obra' : 'Salida registrada en obra'),
       hoursWorked,
-      hourlyRate: worker.hourlyRate,
+      hourlyRate: shiftRate,
       calculatedCost,
       status: 'valid',
       createdAt: nowIso,
@@ -719,8 +722,8 @@ async function handleTimeRecord(req: Request, res: Response) {
           totalHours: hoursWorked || 0,
           regularHours: hoursWorked ? Math.min(8, hoursWorked) : 0,
           overtimeHours: hoursWorked ? Math.max(0, hoursWorked - 8) : 0,
-          hourlyRate: worker.hourlyRate,
-          overtimeRate: Number((worker.hourlyRate * 1.35).toFixed(2)),
+          hourlyRate: shiftRate,
+          overtimeRate: Number((shiftRate * 1.35).toFixed(2)),
           calculatedCost: calculatedCost || 0,
           status: type === 'check_out' ? 'completed' : 'active',
           approvalStatus: 'pending',

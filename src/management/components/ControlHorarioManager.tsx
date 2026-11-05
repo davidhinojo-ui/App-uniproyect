@@ -237,7 +237,7 @@ export const ControlHorarioManager: React.FC<ControlHorarioManagerProps> = ({
   // When selected worker changes, sync default rates
   useEffect(() => {
     if (selectedWorker) {
-      const stdRate = selectedWorker.standardHourlyRate || (selectedWorker.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 15);
+      const stdRate = selectedWorker.standardHourlyRate || (selectedWorker.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 18.0);
       const otRate = selectedWorker.overtimeHourlyRate || Number((stdRate * 1.35).toFixed(2));
       setCustomHourlyRate(stdRate);
       setCustomOvertimeRate(otRate);
@@ -249,7 +249,7 @@ export const ControlHorarioManager: React.FC<ControlHorarioManagerProps> = ({
 
   // Calculations for regular, overtime, total hours and costs
   const calculation = useMemo(() => {
-    if (!clockIn || !clockOut) return { totalHours: 0, regularHours: 0, overtimeHours: 0, totalCost: 0, hourlyRate: 15, overtimeRate: 20 };
+    if (!clockIn || !clockOut) return { totalHours: 0, regularHours: 0, overtimeHours: 0, totalCost: 0, hourlyRate: 18.0, overtimeRate: 24.0 };
 
     const [inH, inM] = clockIn.split(':').map(Number);
     const [outH, outM] = clockOut.split(':').map(Number);
@@ -268,7 +268,7 @@ export const ControlHorarioManager: React.FC<ControlHorarioManagerProps> = ({
     const regularHours = Math.min(8, netHours);
     const overtimeHours = Number(Math.max(0, netHours - 8).toFixed(2));
 
-    const stdRate = customHourlyRate ?? (selectedWorker?.standardHourlyRate || (selectedWorker?.dailyRate ? selectedWorker.dailyRate / 8 : 15));
+    const stdRate = customHourlyRate ?? (selectedWorker?.standardHourlyRate || (selectedWorker?.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 18.0));
     const otRate = customOvertimeRate ?? (selectedWorker?.overtimeHourlyRate || (stdRate * 1.35));
 
     const costRegular = regularHours * stdRate;
@@ -477,7 +477,7 @@ export const ControlHorarioManager: React.FC<ControlHorarioManagerProps> = ({
       const worker = trabajadoresEmpresa.find(w => w.id === wId);
       if (!worker) return;
 
-      const stdRate = worker.standardHourlyRate || (worker.dailyRate ? worker.dailyRate / 8 : 15);
+      const stdRate = worker.standardHourlyRate || (worker.dailyRate ? Number((worker.dailyRate / 8).toFixed(2)) : 18.0);
       const otRate = worker.overtimeHourlyRate || (stdRate * 1.35);
 
       const [inH, inM] = clockIn.split(':').map(Number);
@@ -1015,7 +1015,7 @@ export const ControlHorarioManager: React.FC<ControlHorarioManagerProps> = ({
                             <span className="text-[10px] text-white/40">({w.role || 'Operario'})</span>
                           </div>
                           <span className="text-[10px] font-mono text-emerald-400">
-                            {w.dailyRate ? `${w.dailyRate}€/día` : `${(w.standardHourlyRate || 15)}€/h`}
+                            {w.standardHourlyRate ? `${w.standardHourlyRate}€/h` : (w.dailyRate ? `${w.dailyRate}€/día (${Number((w.dailyRate / 8).toFixed(1))}€/h)` : '18€/h')}
                           </span>
                         </label>
                       );

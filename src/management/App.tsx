@@ -728,7 +728,10 @@ export default function App() {
               id: w.id,
               name: w.fullName,
               role: w.category,
-              dailyRate: Math.round((Number(w.hourlyRate) || 15) * 8),
+              standardHourlyRate: Number(w.hourlyRate) || 18.0,
+              hourlyRate: Number(w.hourlyRate) || 18.0,
+              dailyRate: Math.round((Number(w.hourlyRate) || 18) * 8),
+              overtimeHourlyRate: Number(((Number(w.hourlyRate) || 18) * 1.35).toFixed(2)),
               phone: w.phone || '',
               active: w.status === 'active',
             }));

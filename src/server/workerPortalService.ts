@@ -102,7 +102,7 @@ export const workersDb: Worker[] = [
     fullName: 'JOSE MANUEL ORDOÑEZ RONDÁN',
     dniNie: '44052426C',
     category: 'Encargado de Obra',
-    hourlyRate: 14.00,
+    hourlyRate: 22.00,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     phone: '653284276',
@@ -116,7 +116,7 @@ export const workersDb: Worker[] = [
     fullName: 'JUAN PABLO MANCHEÑO PERDIGONES',
     dniNie: '31714722E',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.50,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -129,7 +129,7 @@ export const workersDb: Worker[] = [
     fullName: 'ALFONSO LUIS FLORES MACIAS',
     dniNie: '75776604E',
     category: 'Peón Especialista',
-    hourlyRate: 14.00,
+    hourlyRate: 15.50,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -142,7 +142,7 @@ export const workersDb: Worker[] = [
     fullName: 'RAFAEL JIMENEZ GALINDO',
     dniNie: '53154499G',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.50,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -155,7 +155,7 @@ export const workersDb: Worker[] = [
     fullName: 'ANDRÉS MANCHEÑO LOPEZ',
     dniNie: '',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.00,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -168,7 +168,7 @@ export const workersDb: Worker[] = [
     fullName: 'DAVID BAREA FERNANDEZ',
     dniNie: '',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.00,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -181,7 +181,7 @@ export const workersDb: Worker[] = [
     fullName: 'ABRAHAM MANCHEÑO LOPEZ',
     dniNie: '32057606E',
     category: 'Gruista',
-    hourlyRate: 14.00,
+    hourlyRate: 20.00,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -194,7 +194,7 @@ export const workersDb: Worker[] = [
     fullName: 'Jesús Collantes',
     dniNie: '',
     category: 'Peón Ordinario',
-    hourlyRate: 14.00,
+    hourlyRate: 14.50,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -207,7 +207,7 @@ export const workersDb: Worker[] = [
     fullName: 'MARCOS JESUS COLLANTES GUERRERO',
     dniNie: '31737970V',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.50,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -220,7 +220,7 @@ export const workersDb: Worker[] = [
     fullName: 'JORGE NAVES',
     dniNie: '74927270D',
     category: 'Oficial de 1ª Albañil',
-    hourlyRate: 14.00,
+    hourlyRate: 18.00,
     assignedProjectIds: ['obra-1788795466897', 'obra-1788795466519', 'obra-1788795467133', 'obra-1792510754303', 'obra-1793129569377'],
     status: 'active',
     activationCount: 1,
@@ -261,8 +261,8 @@ export async function syncFromFirestore(): Promise<void> {
     if (!workersSnap.empty) {
       workersDb.length = 0;
       workersSnap.forEach((d) => {
-        const data = d.data();
-        const stdRate = Number(data.standardHourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : 14.0);
+        const data = d.data() as any;
+        const stdRate = Number(data.standardHourlyRate) || Number(data.hourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : undefined) || 18.0;
         workersDb.push({
           id: d.id,
           organizationId: ORG_ID,
@@ -725,6 +725,61 @@ export async function handleDeleteWorker(req: Request, res: Response) {
 }
 
 /**
+ * SUPERVISOR / GERENTE: Update Worker Profile & Hourly Rate
+ */
+export async function handleUpdateWorker(req: Request, res: Response) {
+  try {
+    const workerId = req.params.id || req.body.workerId;
+    if (!workerId) return res.status(400).json({ error: 'Falta workerId' });
+
+    const worker = workersDb.find((w) => w.id === workerId);
+    if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
+
+    const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone, dniNie } = req.body;
+    if (fullName) worker.fullName = fullName;
+    if (dniNie !== undefined) worker.dniNie = dniNie;
+    if (category) worker.category = category;
+    if (hourlyRate !== undefined && !isNaN(Number(hourlyRate))) {
+      worker.hourlyRate = Number(hourlyRate);
+    }
+    if (assignedProjectIds) worker.assignedProjectIds = assignedProjectIds;
+    if (status) worker.status = status;
+    if (email !== undefined) worker.email = email;
+    if (phone !== undefined) worker.phone = phone;
+    worker.updatedAt = new Date().toISOString();
+
+    // Persist to Firestore plantillaTrabajadores if available
+    if (firestoreDb) {
+      try {
+        await setDoc(doc(firestoreDb, 'plantillaTrabajadores', worker.id), {
+          id: worker.id,
+          name: worker.fullName,
+          role: worker.category,
+          standardHourlyRate: worker.hourlyRate,
+          hourlyRate: worker.hourlyRate,
+          dailyRate: Math.round(worker.hourlyRate * 8),
+          overtimeHourlyRate: Number((worker.hourlyRate * 1.35).toFixed(2)),
+          phone: worker.phone || '',
+          dni: worker.dniNie || '',
+          active: worker.status === 'active',
+          updatedAt: worker.updatedAt,
+        }, { merge: true });
+        console.log(`[WorkerPortalService] Tarifa de trabajador actualizada en Firestore: ${worker.fullName} -> ${worker.hourlyRate}€/h`);
+      } catch (fErr) {
+        console.warn('[WorkerPortalService] Error actualizando plantillaTrabajadores en Firestore:', fErr);
+      }
+    }
+
+    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_UPDATED', { workerId: worker.id, hourlyRate: worker.hourlyRate, changes: req.body }, worker.id);
+
+    return res.json({ success: true, worker });
+  } catch (err: any) {
+    console.error('Error al actualizar trabajador:', err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
+/**
  * SUPERVISOR / GERENTE: Give Visto Bueno / Approval to Time Record
  * Automatically imputes calculated labor expense directly to the obra in Firestore 'personal' collection!
  */
@@ -739,7 +794,7 @@ export async function handleApproveTimeRecord(req: Request, res: Response) {
     if (!record) return res.status(404).json({ error: 'Fichaje no encontrado' });
 
     const worker = workersDb.find((w) => w.id === record.workerId);
-    const hourlyRate = record.hourlyRate || worker?.hourlyRate || 14.0;
+    const hourlyRate = record.hourlyRate || worker?.hourlyRate || ((worker as any)?.dailyRate ? Number(((worker as any).dailyRate / 8).toFixed(2)) : 18.0);
     const hours = record.hoursWorked || 8.0;
     const totalCost = Number((record.calculatedCost || (hours * hourlyRate)).toFixed(2));
     const nowIso = new Date().toISOString();
@@ -868,6 +923,7 @@ export async function handleTimeRecord(req: Request, res: Response) {
     if (type === 'check_out') {
       calculatedCost = Number(((hoursWorked ?? 0) * worker.hourlyRate).toFixed(2));
     }
+
     const record: TimeRecord = {
       id: `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
       workerId: worker.id,

@@ -24,6 +24,7 @@ import {
   handleRevokeWorker,
   handleActivateWorkerPortal,
   handleDeleteWorker,
+  handleUpdateWorker,
   handleApproveTimeRecord,
   handleTimeRecord,
   handleGetWorkerTimeRecords,
@@ -485,28 +486,8 @@ app.post('/api/supervisor/workers', (req, res) => {
   }
 });
 
-app.put('/api/supervisor/workers/:id', (req, res) => {
-  try {
-    const worker = workersDb.find((w) => w.id === req.params.id);
-    if (!worker) return res.status(404).json({ error: 'Trabajador no encontrado' });
-
-    const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone } = req.body;
-    if (fullName) worker.fullName = fullName;
-    if (category) worker.category = category;
-    if (hourlyRate !== undefined) worker.hourlyRate = Number(hourlyRate);
-    if (assignedProjectIds) worker.assignedProjectIds = assignedProjectIds;
-    if (status) worker.status = status;
-    if (email !== undefined) worker.email = email;
-    if (phone !== undefined) worker.phone = phone;
-    worker.updatedAt = new Date().toISOString();
-
-    recordAuditLog('supervisor-david', 'supervisor', 'WORKER_UPDATED', { workerId: worker.id, changes: req.body }, worker.id);
-
-    res.json({ success: true, worker });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
-});
+app.put('/api/supervisor/workers/:id', handleUpdateWorker);
+app.patch('/api/supervisor/workers/:id', handleUpdateWorker);
 
 app.get('/api/supervisor/projects', (req, res) => {
   res.json({ projects: projectsDb });

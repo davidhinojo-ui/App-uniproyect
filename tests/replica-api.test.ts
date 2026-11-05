@@ -38,8 +38,8 @@ test('persistent portal flow: QR, activation, authenticated shift, approval and 
   let server = createReplicaApp(factory).listen(0, '127.0.0.1');
   await once(server, 'listening');
   const base = () => `http://127.0.0.1:${(server.address() as any).port}`;
-  const request = async (url: string, body?: any, token?: string) => {
-    const response = await fetch(base() + url, { method: body ? 'POST' : 'GET', headers: {
+  const request = async (url: string, body?: any, token?: string, method?: 'PUT' | 'PATCH') => {
+    const response = await fetch(base() + url, { method: method ?? (body ? 'POST' : 'GET'), headers: {
       'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}),
     }, body: body ? JSON.stringify(body) : undefined });
     return { status: response.status, data: await response.json() };
@@ -50,6 +50,19 @@ test('persistent portal flow: QR, activation, authenticated shift, approval and 
     const created = await request('/api/supervisor/workers', { fullName: 'Test worker', category: 'Test', hourlyRate: 12, assignedProjectIds: [project.data.project.id] }, 'supervisor-test');
     assert.equal(created.status, 200);
     const id = created.data.worker.id;
+    assert.equal((await request(`/api/supervisor/workers/${id}`, { hourlyRate: 18.5 }, undefined, 'PATCH')).status, 401);
+    const tariff = await request(`/api/supervisor/workers/${id}`, { hourlyRate: 18.5, dniNie: 'test-id' }, 'supervisor-test', 'PATCH');
+    assert.equal(tariff.status, 200);
+    assert.equal(tariff.data.worker.dniNie, 'TEST-ID');
+    assert.equal(tariff.data.worker.status, 'pending');
+    assert.equal(rows.plantillaTrabajadores[0].standardHourlyRate, 18.5);
+    assert.equal(rows.plantillaTrabajadores[0].hourlyRate, 18.5);
+    assert.equal(rows.plantillaTrabajadores[0].dailyRate, 148);
+    assert.equal(rows.plantillaTrabajadores[0].overtimeHourlyRate, 24.98);
+    for (const invalidRate of [-1, 0, 'NaN', 'Infinity', null, true, '']) {
+      assert.equal((await request(`/api/supervisor/workers/${id}`, { hourlyRate: invalidRate }, 'supervisor-test', 'PUT')).status, 400);
+      assert.equal(rows.plantillaTrabajadores[0].standardHourlyRate, 18.5);
+    }
     const invitation = await request('/api/worker-portal/invitation', { workerId: id }, 'supervisor-test');
     assert.equal(invitation.status, 200);
     const inviteToken = new URLSearchParams(invitation.data.activationUrl.split('?')[1]).get('token');
@@ -72,8 +85,11 @@ test('persistent portal flow: QR, activation, authenticated shift, approval and 
     assert.equal(entry.status, 200); assert.equal(persisted.records.length, 1);
     assert.equal((await request('/api/worker-portal/time-records', { ...params, type: 'check_in' }, workerToken)).status, 409);
     assert.equal((await request(`/api/supervisor/time-records/${entry.data.record.id}/approve`, {}, 'supervisor-test')).status, 409);
+    assert.equal((await request(`/api/supervisor/workers/${id}`, { hourlyRate: 22 }, 'supervisor-test', 'PUT')).status, 200);
     const exit = await request('/api/worker-portal/time-records', { ...params, type: 'check_out' }, workerToken);
     assert.equal(exit.status, 200); assert.equal(exit.data.record.hoursWorked, 0);
+    assert.equal(exit.data.record.hourlyRate, 18.5);
+    assert.equal(persisted.records[0].hourlyRate, 18.5);
     assert.equal(rows.fichajes.length, 1); assert.equal(rows.fichajes[0].status, 'completed');
     assert.equal(rows.fichajes[0].clockIn, rows.fichajes[0].clockOut);
     const approved = await request(`/api/supervisor/time-records/${exit.data.record.id}/approve`, { managerName: 'Test manager' }, 'supervisor-test');
@@ -83,6 +99,7 @@ test('persistent portal flow: QR, activation, authenticated shift, approval and 
     await new Promise<void>(resolve => server.close(() => resolve()));
     server = createReplicaApp(factory).listen(0, '127.0.0.1'); await once(server, 'listening');
     assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).data.worker.id, id);
+    assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).data.worker.hourlyRate, 22);
     assert.equal((await request(`/api/worker-portal/time-records?workerId=${id}`, undefined, workerToken)).data.records.length, 2);
     const workerLogin = await request('/api/worker-portal/login', { identifier: id, pin: '123456' });
     assert.equal(workerLogin.status, 200);
