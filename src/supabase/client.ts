@@ -1,6 +1,7 @@
 import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 
 export const SUPABASE_URL = 'https://byczwnknarrnoiaoqyxa.supabase.co';
+const SUPABASE_ORGANIZATION_ID = 'c2ff363b-a812-4b2f-887c-618941e47cff';
 let client: SupabaseClient | undefined;
 export function getSupabase(): SupabaseClient {
   if (client) return client;
@@ -19,7 +20,8 @@ export async function supervisorContext() {
   const { data: { session }, error } = await supabase.auth.getSession();
   if (error || !session) throw new Error('Inicia sesión para acceder a los datos.');
   const profile = await supabase.from('perfiles').select('organizacion_id,rol').eq('id', session.user.id).single();
-  if (profile.error || !profile.data || !['administrador', 'supervisor'].includes(profile.data.rol)) {
+  if (profile.error || profile.data?.organizacion_id !== SUPABASE_ORGANIZATION_ID ||
+      !['administrador', 'supervisor'].includes(profile.data.rol)) {
     throw new Error('Tu cuenta no tiene permisos de gestión.');
   }
   return { supabase, session, organizationId: profile.data.organizacion_id as string };

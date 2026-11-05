@@ -20,7 +20,7 @@
     "@vitejs/plugin-react": "^5.0.4",
     "dotenv": "^17.2.3",
     "exceljs": "^4.4.0",
-    "express": "^4.21.2",
+    "express": "^4.22.3",
     "firebase": "^12.14.0",
     "html2pdf.js": "^0.14.0",
     "jspdf": "^4.2.1",
@@ -46,5 +46,13 @@
     "tsx": "^4.21.0",
     "typescript": "~5.8.2",
     "vite": "^6.2.3"
+  },
+  "overrides": {
+    "@firebase/firestore": {
+      "@grpc/grpc-js": "1.13.6"
+    },
+    "exceljs": {
+      "uuid": "11.1.1"
+    }
   }
 }

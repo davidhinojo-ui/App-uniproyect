@@ -94,7 +94,7 @@ export function generateGlobalBackup(
     version: '3.0',
     appName: 'Uniproyect - Control Integral de Obras y Gastos',
     exportDate: new Date().toISOString(),
-    companyName: 'JOSÉ REAL CONSTRUCCIONES, S.L.',
+    companyName: 'UNIPROYECT',
     userEmail: userEmail || null,
     summary,
     data: {
@@ -338,7 +338,7 @@ export function validateBackupPayload(rawInput: string | any): BackupValidationR
       version: parsed.version || '3.0',
       appName: parsed.appName || 'Uniproyect - Control Integral de Obras y Gastos',
       exportDate: parsed.exportDate || new Date().toISOString(),
-      companyName: parsed.companyName || 'JOSÉ REAL CONSTRUCCIONES, S.L.',
+      companyName: parsed.companyName || 'UNIPROYECT',
       userEmail: parsed.userEmail || null,
       summary,
       data: {
