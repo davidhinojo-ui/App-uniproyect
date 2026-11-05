@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 import postcss from 'postcss';
 
-const css = postcss.parse(readFileSync(new URL('../src/index.css', import.meta.url), 'utf8'));
+const css = postcss.parse(readFileSync(new URL('../src/index.css', import.meta.url), 'utf8').replaceAll('\r\n', '\n'));
 function colorFor(selector: string, property = 'color') {
   let value = '';
   css.walkRules(rule => {

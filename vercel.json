@@ -1,0 +1,16 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "installCommand": "npm ci --no-audit --no-fund",
+  "buildCommand": "npm run build:replica",
+  "outputDirectory": "dist",
+  "git": { "deploymentEnabled": false },
+  "functions": { "api/[...path].ts": { "maxDuration": 60 } },
+  "rewrites": [
+    { "source": "/((?!assets/|api/|version\\.json$).*)", "destination": "/index.html" }
+  ],
+  "headers": [
+    { "source": "/api/:path*", "headers": [{ "key": "Cache-Control", "value": "no-store" }] },
+    { "source": "/:path*", "headers": [{ "key": "X-Content-Type-Options", "value": "nosniff" }, { "key": "Referrer-Policy", "value": "no-referrer" }] }
+  ]
+}

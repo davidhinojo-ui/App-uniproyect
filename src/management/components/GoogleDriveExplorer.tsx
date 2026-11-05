@@ -10,7 +10,7 @@ import {
 import { 
   listDriveFiles, downloadFileAsBase64, GoogleDriveItem, getOrCreateDriveFolderAtPath, uploadBinaryToDriveFolder 
 } from '../lib/googleDriveService';
-import { User } from 'firebase/auth';
+import { User } from '../../supabase/authCompat';
 import { 
   Folder, FileText, ChevronRight, RefreshCw, 
   Search, ArrowLeft, LogOut, CheckCircle, AlertCircle, Sparkles, Loader2, HardDrive,

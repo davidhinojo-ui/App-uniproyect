@@ -17,6 +17,8 @@ import {
   Trash2,
   Copy,
   Check,
+  Pencil,
+  X,
 } from 'lucide-react';
 
 interface WorkerManagementProps {
@@ -47,6 +49,40 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
   const [newSelectedProjects, setNewSelectedProjects] = useState<string[]>(['proj-001']);
   const [submittingWorker, setSubmittingWorker] = useState(false);
   const [formError, setFormError] = useState('');
+
+  // Inline hourly rate editing state
+  const [editingRateWorkerId, setEditingRateWorkerId] = useState<string | null>(null);
+  const [tempHourlyRate, setTempHourlyRate] = useState<string>('');
+  const [savingRateWorkerId, setSavingRateWorkerId] = useState<string | null>(null);
+
+  const handleStartEditRate = (worker: Worker) => {
+    setEditingRateWorkerId(worker.id);
+    setTempHourlyRate(worker.hourlyRate.toFixed(2));
+  };
+
+  const handleCancelEditRate = () => {
+    setEditingRateWorkerId(null);
+    setTempHourlyRate('');
+  };
+
+  const handleSaveRate = async (workerId: string) => {
+    const val = Number(tempHourlyRate.replace(',', '.'));
+    if (!Number.isFinite(val) || val <= 0 || savingRateWorkerId) {
+      alert('Por favor introduzca un coste por hora válido mayor que 0');
+      return;
+    }
+    try {
+      setSavingRateWorkerId(workerId);
+      await api.updateWorker(workerId, { hourlyRate: val });
+      setEditingRateWorkerId(null);
+      setTempHourlyRate('');
+      onRefresh();
+    } catch (err: any) {
+      alert('Error al guardar la nueva tarifa: ' + (err.message || err));
+    } finally {
+      setSavingRateWorkerId(null);
+    }
+  };
 
   // Handle Generate QR Invitation
   const handleGenerateQr = async (workerId: string) => {
@@ -270,11 +306,65 @@ export const WorkerManagement: React.FC<WorkerManagementProps> = ({
                     <span className="text-slate-400">DNI / NIE:</span>
                     <span className="font-mono font-medium text-slate-200">{worker.dniNie || '—'}</span>
                   </div>
-                  <div className="flex items-center justify-between py-1 border-b border-slate-700/40">
+                  <div className="flex items-center justify-between py-1.5 border-b border-slate-700/40">
                     <span className="text-slate-400 flex items-center gap-1">
                       <Euro className="w-3.5 h-3.5 text-emerald-400" /> Coste hora:
                     </span>
-                    <span className="font-bold text-emerald-400">{worker.hourlyRate.toFixed(2)} €/h</span>
+                    {editingRateWorkerId === worker.id ? (
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          step="0.5"
+                          min="1"
+                          aria-label={`Coste por hora de ${worker.fullName}`}
+                          disabled={savingRateWorkerId === worker.id}
+                          value={tempHourlyRate}
+                          onChange={(e) => setTempHourlyRate(e.target.value)}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') handleSaveRate(worker.id);
+                            if (e.key === 'Escape') handleCancelEditRate();
+                          }}
+                          autoFocus
+                          className="w-20 px-2 py-0.5 bg-slate-900 border border-emerald-500 rounded text-right text-emerald-300 font-bold text-xs focus:outline-none focus:ring-1 focus:ring-emerald-400"
+                          placeholder="0.00"
+                        />
+                        <span className="text-xs text-slate-400 font-semibold">€/h</span>
+                        <button
+                          type="button"
+                          onClick={() => handleSaveRate(worker.id)}
+                          disabled={savingRateWorkerId === worker.id}
+                          className="p-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white cursor-pointer transition-colors shadow"
+                          title="Guardar tarifa horaria"
+                        >
+                          {savingRateWorkerId === worker.id ? (
+                            <Loader2 className="w-3 h-3 animate-spin" />
+                          ) : (
+                            <Check className="w-3 h-3" />
+                          )}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={handleCancelEditRate}
+                          className="p-1 rounded bg-slate-700 hover:bg-slate-600 text-slate-300 cursor-pointer transition-colors"
+                          title="Cancelar"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center gap-2">
+                        <span className="font-bold text-emerald-400 font-mono text-xs">{worker.hourlyRate.toFixed(2)} €/h</span>
+                        <button
+                          type="button"
+                          onClick={() => handleStartEditRate(worker)}
+                          className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] text-slate-400 hover:text-emerald-300 hover:bg-slate-700/60 transition-colors cursor-pointer border border-slate-700 hover:border-emerald-500/40"
+                          title="Modificar coste por hora de este trabajador"
+                        >
+                          <Pencil className="w-2.5 h-2.5" />
+                          <span>Editar</span>
+                        </button>
+                      </div>
+                    )}
                   </div>
                   <div className="py-1">
                     <span className="text-slate-400 flex items-center gap-1 mb-1">

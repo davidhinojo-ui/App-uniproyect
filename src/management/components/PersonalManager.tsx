@@ -497,7 +497,7 @@ export default function PersonalManager({
       setModalWorkerRole(worker.role);
       setModalDailyRate(worker.dailyRate);
       setModalOvertimeRate(worker.overtimeHourlyRate);
-      setModalStandardHourlyRate(worker.standardHourlyRate || Math.round(worker.dailyRate / 8) || 14);
+      setModalStandardHourlyRate(worker.standardHourlyRate || (worker.dailyRate ? Number((worker.dailyRate / 8).toFixed(2)) : 18.0));
       setModalDni(worker.dni || '');
       setModalPhone(worker.phone || '');
       setModalEmail(worker.email || '');
@@ -507,9 +507,9 @@ export default function PersonalManager({
       setEditingWorkerCatalog(null);
       setModalWorkerName('');
       setModalWorkerRole(CONST_ROLES[0]);
-      setModalDailyRate(95);
-      setModalOvertimeRate(18);
-      setModalStandardHourlyRate(14);
+      setModalDailyRate(148);
+      setModalOvertimeRate(24);
+      setModalStandardHourlyRate(18.5);
       setModalDni('');
       setModalPhone('');
       setModalEmail('');

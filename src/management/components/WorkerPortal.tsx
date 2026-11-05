@@ -307,8 +307,8 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
     const regular = Math.min(8, hours);
     const overtime = Math.max(0, hours - 8);
     
-    const hRate = currentActiveShift.hourlyRate || 14.5;
-    const oRate = currentActiveShift.overtimeRate || 18.0;
+    const hRate = currentActiveShift.hourlyRate || (selectedWorker?.standardHourlyRate || (selectedWorker?.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 18.0));
+    const oRate = currentActiveShift.overtimeRate || (selectedWorker?.overtimeHourlyRate || Number((hRate * 1.35).toFixed(2)));
     
     const cost = Number(((regular * hRate) + (overtime * oRate)).toFixed(2));
     return {
@@ -334,8 +334,8 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
     setIsSubmittingClockIn(true);
     try {
       const hRate = selectedWorker.standardHourlyRate || 
-        (selectedWorker.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 14.5);
-      const oRate = selectedWorker.overtimeHourlyRate || 18.0;
+        (selectedWorker.dailyRate ? Number((selectedWorker.dailyRate / 8).toFixed(2)) : 18.0);
+      const oRate = selectedWorker.overtimeHourlyRate || Number((hRate * 1.35).toFixed(2));
 
       await onClockIn({
         workerId: selectedWorker.id,
@@ -526,7 +526,7 @@ export const WorkerPortal: React.FC<WorkerPortalProps> = ({
               <div className="text-right">
                 <span className="text-[11px] text-slate-400 block">Tarifa Oficial</span>
                 <span className="font-bold text-amber-400">
-                  {selectedWorker.standardHourlyRate || (selectedWorker.dailyRate ? (selectedWorker.dailyRate / 8).toFixed(2) : 14.5)} €/h
+                  {selectedWorker.standardHourlyRate || (selectedWorker.dailyRate ? (selectedWorker.dailyRate / 8).toFixed(2) : 18.0)} €/h
                 </span>
               </div>
             </div>

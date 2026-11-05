@@ -4,3 +4,9 @@ dist/
 .dev.pid
 .DS_Store
 *.log
+.env
+.env.*
+!.env.example
+.vercel/
+build-server/
+migration-private/

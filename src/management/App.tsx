@@ -1,3 +1,4 @@
+import { authorizedFetch } from '../supabase/http';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -16,8 +17,8 @@ import {
 
 // Firebase Integrations
 import { auth, db, googleProvider, OperationType, handleFirestoreError } from './firebase';
-import { onAuthStateChanged, User, signInWithPopup, signOut } from 'firebase/auth';
-import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, writeBatch } from 'firebase/firestore';
+import { onAuthStateChanged, User, signInWithPopup, signOut } from '../supabase/authCompat';
+import { collection, doc, setDoc, deleteDoc, onSnapshot, getDocs, writeBatch } from '../supabase/documentCompat';
 
 // Modular layouts
 import CompanyHeader from './components/CompanyHeader';
@@ -711,7 +712,7 @@ export default function App() {
 
     // Sync registered obras to supervisor backend if available
     if (loadedObras.length > 0) {
-      fetch('/api/supervisor/sync-projects', {
+      authorizedFetch('/api/supervisor/sync-projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projects: loadedObras }),
@@ -719,7 +720,7 @@ export default function App() {
     }
 
     if (!savedPlantilla) {
-      fetch('/api/supervisor/workers')
+      authorizedFetch('/api/supervisor/workers')
         .then(res => res.ok ? res.json() : null)
         .then(data => {
           if (data && Array.isArray(data.workers) && data.workers.length > 0) {
@@ -727,7 +728,10 @@ export default function App() {
               id: w.id,
               name: w.fullName,
               role: w.category,
-              dailyRate: Math.round((Number(w.hourlyRate) || 15) * 8),
+              standardHourlyRate: Number(w.hourlyRate) || 18.0,
+              hourlyRate: Number(w.hourlyRate) || 18.0,
+              dailyRate: Math.round((Number(w.hourlyRate) || 18) * 8),
+              overtimeHourlyRate: Number(((Number(w.hourlyRate) || 18) * 1.35).toFixed(2)),
               phone: w.phone || '',
               active: w.status === 'active',
             }));
@@ -742,7 +746,7 @@ export default function App() {
   // Keep registered obras synchronized with supervisor & worker portal backend
   useEffect(() => {
     if (obras && obras.length > 0) {
-      fetch('/api/supervisor/sync-projects', {
+      authorizedFetch('/api/supervisor/sync-projects', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projects: obras }),
@@ -2610,7 +2614,7 @@ export default function App() {
     try {
       setAnalysisProgress('Procesando imagen con IA Gemini 3.5-Flash (Estructurando productos, IVA y totales)...');
       
-      const response = await fetch('/api/gemini/analyze', {
+      const response = await authorizedFetch('/api/gemini/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -2842,7 +2846,7 @@ export default function App() {
           : it
       ));
 
-      const response = await fetch('/api/gemini/analyze', {
+      const response = await authorizedFetch('/api/gemini/analyze', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

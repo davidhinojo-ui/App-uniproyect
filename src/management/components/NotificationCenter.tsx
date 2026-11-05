@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Bell, Check, Trash2, X, AlertTriangle, FileCheck, ShieldAlert, Sparkles, Volume2, Settings } from 'lucide-react';
 import { AppNotification, requestPushPermission, getPushPermissionStatus, sendPushNotification } from '../lib/notificationService';
-import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from 'firebase/firestore';
+import { collection, onSnapshot, doc, setDoc, deleteDoc, writeBatch } from '../../supabase/documentCompat';
 import { db } from '../firebase';
 import { sanitizeForFirestore } from '../lib/firestoreSanitizer';
 import { motion, AnimatePresence } from 'motion/react';

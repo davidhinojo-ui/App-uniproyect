@@ -1,13 +1,34 @@
-"use strict";
+// src/server/workerPortalService.ts
 import crypto from "crypto";
+
+// src/server/shiftValidation.ts
+function validateShift(records, workerId, projectId, type, now) {
+  const latest = records.filter((record) => record.workerId === workerId).sort((a, b) => Date.parse(b.timestamp) - Date.parse(a.timestamp))[0];
+  if (type === "check_in") {
+    return latest?.type === "check_in" ? { error: "Ya existe una entrada abierta. Registre la salida antes de volver a entrar." } : {};
+  }
+  if (!latest || latest.type !== "check_in") {
+    return { error: "No existe una entrada abierta para registrar esta salida." };
+  }
+  if (latest.projectId !== projectId) {
+    return { error: "La salida debe corresponder a la obra de la entrada abierta." };
+  }
+  const elapsed = Date.parse(now) - Date.parse(latest.timestamp);
+  if (!Number.isFinite(elapsed) || elapsed < 0) {
+    return { error: "La fecha de la entrada no permite calcular la jornada." };
+  }
+  return { hoursWorked: Math.min(14, Number((elapsed / 36e5).toFixed(2))) };
+}
+
+// src/server/workerPortalService.ts
 import QRCode from "qrcode";
 import fs from "fs";
 import path from "path";
 import { initializeApp, getApps, getApp } from "firebase/app";
 import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "firebase/firestore";
-const ORG_ID = "org-jose-real";
-const ORG_NAME = "Jos\xE9 Real Construcciones, S.L.";
-export let firestoreDb = null;
+var ORG_ID = "org-jose-real";
+var ORG_NAME = "Jos\xE9 Real Construcciones, S.L.";
+var firestoreDb = null;
 try {
   const configPath = path.resolve(process.cwd(), "firebase-applet-config.json");
   if (fs.existsSync(configPath)) {
@@ -19,7 +40,7 @@ try {
 } catch (e) {
   console.warn("[WorkerPortalService] Inicializaci\xF3n de Firestore omitida o fallida:", e);
 }
-export const projectsDb = [
+var projectsDb = [
   {
     id: "obra-1788795466519",
     organizationId: ORG_ID,
@@ -86,14 +107,14 @@ export const projectsDb = [
     createdAt: "2026-10-10T08:00:00Z"
   }
 ];
-export const workersDb = [
+var workersDb = [
   {
     id: "trab-emp-1788362023057",
     organizationId: ORG_ID,
     fullName: "JOSE MANUEL ORDO\xD1EZ ROND\xC1N",
     dniNie: "44052426C",
     category: "Encargado de Obra",
-    hourlyRate: 14,
+    hourlyRate: 22,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     phone: "653284276",
@@ -107,7 +128,7 @@ export const workersDb = [
     fullName: "JUAN PABLO MANCHE\xD1O PERDIGONES",
     dniNie: "31714722E",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18.5,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -120,7 +141,7 @@ export const workersDb = [
     fullName: "ALFONSO LUIS FLORES MACIAS",
     dniNie: "75776604E",
     category: "Pe\xF3n Especialista",
-    hourlyRate: 14,
+    hourlyRate: 15.5,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -133,7 +154,7 @@ export const workersDb = [
     fullName: "RAFAEL JIMENEZ GALINDO",
     dniNie: "53154499G",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18.5,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -146,7 +167,7 @@ export const workersDb = [
     fullName: "ANDR\xC9S MANCHE\xD1O LOPEZ",
     dniNie: "",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -159,7 +180,7 @@ export const workersDb = [
     fullName: "DAVID BAREA FERNANDEZ",
     dniNie: "",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -172,7 +193,7 @@ export const workersDb = [
     fullName: "ABRAHAM MANCHE\xD1O LOPEZ",
     dniNie: "32057606E",
     category: "Gruista",
-    hourlyRate: 14,
+    hourlyRate: 20,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -185,7 +206,7 @@ export const workersDb = [
     fullName: "Jes\xFAs Collantes",
     dniNie: "",
     category: "Pe\xF3n Ordinario",
-    hourlyRate: 14,
+    hourlyRate: 14.5,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -198,7 +219,7 @@ export const workersDb = [
     fullName: "MARCOS JESUS COLLANTES GUERRERO",
     dniNie: "31737970V",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18.5,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -211,7 +232,7 @@ export const workersDb = [
     fullName: "JORGE NAVES",
     dniNie: "74927270D",
     category: "Oficial de 1\xAA Alba\xF1il",
-    hourlyRate: 14,
+    hourlyRate: 18,
     assignedProjectIds: ["obra-1788795466897", "obra-1788795466519", "obra-1788795467133", "obra-1792510754303", "obra-1793129569377"],
     status: "active",
     activationCount: 1,
@@ -219,7 +240,7 @@ export const workersDb = [
     updatedAt: "2026-10-31T08:00:00Z"
   }
 ];
-export async function syncFromFirestore() {
+async function syncFromFirestore() {
   if (!firestoreDb) return;
   try {
     const [workersSnap, obrasSnap] = await Promise.all([
@@ -249,7 +270,7 @@ export async function syncFromFirestore() {
       workersDb.length = 0;
       workersSnap.forEach((d) => {
         const data = d.data();
-        const stdRate = Number(data.standardHourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : 14);
+        const stdRate = Number(data.standardHourlyRate) || Number(data.hourlyRate) || (data.dailyRate ? Number((data.dailyRate / 8).toFixed(2)) : void 0) || 18;
         workersDb.push({
           id: d.id,
           organizationId: ORG_ID,
@@ -271,10 +292,10 @@ export async function syncFromFirestore() {
     console.warn("[WorkerPortalService] Fallo al sincronizar desde Firestore:", err);
   }
 }
-export const workerDocumentsDb = [];
-export const timeRecordsDb = [];
-export const workerInvitationsMap = /* @__PURE__ */ new Map();
-export const auditLogsDb = [
+var workerDocumentsDb = [];
+var timeRecordsDb = [];
+var workerInvitationsMap = /* @__PURE__ */ new Map();
+var auditLogsDb = [
   {
     id: "log-001",
     organizationId: ORG_ID,
@@ -285,10 +306,10 @@ export const auditLogsDb = [
     timestamp: "2026-10-31T06:00:00Z"
   }
 ];
-export function hashToken(plainToken) {
+function hashToken(plainToken) {
   return crypto.createHash("sha256").update(plainToken).digest("hex");
 }
-export function recordAuditLog(actorUid, actorRole, action, details, targetWorkerId) {
+function recordAuditLog(actorUid, actorRole, action, details, targetWorkerId) {
   const log = {
     id: `log-${Date.now()}-${crypto.randomBytes(4).toString("hex")}`,
     organizationId: ORG_ID,
@@ -302,7 +323,7 @@ export function recordAuditLog(actorUid, actorRole, action, details, targetWorke
   auditLogsDb.unshift(log);
   if (auditLogsDb.length > 500) auditLogsDb.pop();
 }
-export async function handleCreateInvitation(req, res) {
+async function handleCreateInvitation(req, res) {
   try {
     const { workerId } = req.body;
     if (!workerId) {
@@ -375,7 +396,7 @@ export async function handleCreateInvitation(req, res) {
     return res.status(500).json({ error: "Error interno al generar c\xF3digo QR: " + error.message });
   }
 }
-export async function handleVerifyInvitation(req, res) {
+async function handleVerifyInvitation(req, res) {
   try {
     const token = req.query.token;
     if (!token || typeof token !== "string" || token.length < 20) {
@@ -413,7 +434,7 @@ export async function handleVerifyInvitation(req, res) {
     return res.status(500).json({ error: "Error al comprobar invitaci\xF3n" });
   }
 }
-export async function handleActivateWorker(req, res) {
+async function handleActivateWorker(req, res) {
   try {
     const { token, pin, email, password } = req.body;
     if (!token) {
@@ -475,7 +496,7 @@ export async function handleActivateWorker(req, res) {
     return res.status(500).json({ error: "Error durante la activaci\xF3n: " + error.message });
   }
 }
-export async function handleWorkerLogin(req, res) {
+async function handleWorkerLogin(req, res) {
   try {
     const { workerId, identifier, pin } = req.body;
     const lookupId = (workerId || identifier || "").trim();
@@ -517,7 +538,7 @@ export async function handleWorkerLogin(req, res) {
     return res.status(500).json({ error: "Error de autenticaci\xF3n" });
   }
 }
-export async function handleRevokeWorker(req, res) {
+async function handleRevokeWorker(req, res) {
   try {
     const workerId = req.body.workerId || req.params.id;
     const reason = req.body.reason;
@@ -544,7 +565,7 @@ export async function handleRevokeWorker(req, res) {
     return res.status(500).json({ error: "Error al revocar portal: " + error.message });
   }
 }
-export async function handleActivateWorkerPortal(req, res) {
+async function handleActivateWorkerPortal(req, res) {
   try {
     const workerId = req.body.workerId || req.params.id;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
@@ -565,7 +586,7 @@ export async function handleActivateWorkerPortal(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-export async function handleDeleteWorker(req, res) {
+async function handleDeleteWorker(req, res) {
   try {
     const workerId = req.params.id || req.body.workerId;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
@@ -599,7 +620,52 @@ export async function handleDeleteWorker(req, res) {
     return res.status(500).json({ error: "Error al eliminar trabajador: " + error.message });
   }
 }
-export async function handleApproveTimeRecord(req, res) {
+async function handleUpdateWorker(req, res) {
+  try {
+    const workerId = req.params.id || req.body.workerId;
+    if (!workerId) return res.status(400).json({ error: "Falta workerId" });
+    const worker = workersDb.find((w) => w.id === workerId);
+    if (!worker) return res.status(404).json({ error: "Trabajador no encontrado" });
+    const { fullName, category, hourlyRate, assignedProjectIds, status, email, phone, dniNie } = req.body;
+    if (fullName) worker.fullName = fullName;
+    if (dniNie !== void 0) worker.dniNie = dniNie;
+    if (category) worker.category = category;
+    if (hourlyRate !== void 0 && !isNaN(Number(hourlyRate))) {
+      worker.hourlyRate = Number(hourlyRate);
+    }
+    if (assignedProjectIds) worker.assignedProjectIds = assignedProjectIds;
+    if (status) worker.status = status;
+    if (email !== void 0) worker.email = email;
+    if (phone !== void 0) worker.phone = phone;
+    worker.updatedAt = (/* @__PURE__ */ new Date()).toISOString();
+    if (firestoreDb) {
+      try {
+        await setDoc(doc(firestoreDb, "plantillaTrabajadores", worker.id), {
+          id: worker.id,
+          name: worker.fullName,
+          role: worker.category,
+          standardHourlyRate: worker.hourlyRate,
+          hourlyRate: worker.hourlyRate,
+          dailyRate: Math.round(worker.hourlyRate * 8),
+          overtimeHourlyRate: Number((worker.hourlyRate * 1.35).toFixed(2)),
+          phone: worker.phone || "",
+          dni: worker.dniNie || "",
+          active: worker.status === "active",
+          updatedAt: worker.updatedAt
+        }, { merge: true });
+        console.log(`[WorkerPortalService] Tarifa de trabajador actualizada en Firestore: ${worker.fullName} -> ${worker.hourlyRate}\u20AC/h`);
+      } catch (fErr) {
+        console.warn("[WorkerPortalService] Error actualizando plantillaTrabajadores en Firestore:", fErr);
+      }
+    }
+    recordAuditLog("supervisor-david", "supervisor", "WORKER_UPDATED", { workerId: worker.id, hourlyRate: worker.hourlyRate, changes: req.body }, worker.id);
+    return res.json({ success: true, worker });
+  } catch (err) {
+    console.error("Error al actualizar trabajador:", err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+async function handleApproveTimeRecord(req, res) {
   try {
     const recordId = req.params.id || req.body.recordId;
     const { managerName, notes, signature } = req.body;
@@ -607,7 +673,7 @@ export async function handleApproveTimeRecord(req, res) {
     const record = timeRecordsDb.find((r) => r.id === recordId);
     if (!record) return res.status(404).json({ error: "Fichaje no encontrado" });
     const worker = workersDb.find((w) => w.id === record.workerId);
-    const hourlyRate = record.hourlyRate || worker?.hourlyRate || 14;
+    const hourlyRate = record.hourlyRate || worker?.hourlyRate || (worker?.dailyRate ? Number((worker.dailyRate / 8).toFixed(2)) : 18);
     const hours = record.hoursWorked || 8;
     const totalCost = Number((record.calculatedCost || hours * hourlyRate).toFixed(2));
     const nowIso = (/* @__PURE__ */ new Date()).toISOString();
@@ -689,7 +755,7 @@ export async function handleApproveTimeRecord(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-export async function handleTimeRecord(req, res) {
+async function handleTimeRecord(req, res) {
   try {
     const { workerId, projectId, type, notes, location } = req.body;
     if (!workerId || !projectId || !type) {
@@ -708,17 +774,11 @@ export async function handleTimeRecord(req, res) {
     const nowIso = (/* @__PURE__ */ new Date()).toISOString();
     let hoursWorked;
     let calculatedCost;
+    const shift = validateShift(timeRecordsDb, worker.id, projectId, type, nowIso);
+    if ("error" in shift) return res.status(409).json({ error: shift.error });
+    hoursWorked = shift.hoursWorked;
     if (type === "check_out") {
-      const recentCheckIn = timeRecordsDb.filter((tr) => tr.workerId === worker.id && tr.projectId === projectId && tr.type === "check_in").sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-      if (recentCheckIn) {
-        const startMs = new Date(recentCheckIn.timestamp).getTime();
-        const endMs = new Date(nowIso).getTime();
-        const diffHours = (endMs - startMs) / (1e3 * 60 * 60);
-        hoursWorked = Math.max(0.1, Math.min(14, Number(diffHours.toFixed(2))));
-      } else {
-        hoursWorked = 8;
-      }
-      calculatedCost = Number((hoursWorked * worker.hourlyRate).toFixed(2));
+      calculatedCost = Number(((hoursWorked ?? 0) * worker.hourlyRate).toFixed(2));
     }
     const record = {
       id: `tr-${Date.now()}-${crypto.randomBytes(3).toString("hex")}`,
@@ -800,7 +860,7 @@ export async function handleTimeRecord(req, res) {
     return res.status(500).json({ error: "Error al procesar fichaje: " + error.message });
   }
 }
-export async function handleGetWorkerTimeRecords(req, res) {
+async function handleGetWorkerTimeRecords(req, res) {
   try {
     const workerId = req.query.workerId;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
@@ -810,7 +870,7 @@ export async function handleGetWorkerTimeRecords(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-export async function handleGetWorkerDocuments(req, res) {
+async function handleGetWorkerDocuments(req, res) {
   try {
     const workerId = req.query.workerId;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
@@ -820,7 +880,7 @@ export async function handleGetWorkerDocuments(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-export async function handleSignDocument(req, res) {
+async function handleSignDocument(req, res) {
   try {
     const { docId, workerId } = req.body;
     const document = workerDocumentsDb.find((d) => d.id === docId && d.workerId === workerId);
@@ -839,7 +899,7 @@ export async function handleSignDocument(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
-export async function handleGetWorkerProjects(req, res) {
+async function handleGetWorkerProjects(req, res) {
   try {
     const workerId = req.query.workerId;
     if (!workerId) return res.status(400).json({ error: "Falta workerId" });
@@ -853,3 +913,29 @@ export async function handleGetWorkerProjects(req, res) {
     return res.status(500).json({ error: error.message });
   }
 }
+export {
+  auditLogsDb,
+  firestoreDb,
+  handleActivateWorker,
+  handleActivateWorkerPortal,
+  handleApproveTimeRecord,
+  handleCreateInvitation,
+  handleDeleteWorker,
+  handleGetWorkerDocuments,
+  handleGetWorkerProjects,
+  handleGetWorkerTimeRecords,
+  handleRevokeWorker,
+  handleSignDocument,
+  handleTimeRecord,
+  handleUpdateWorker,
+  handleVerifyInvitation,
+  handleWorkerLogin,
+  hashToken,
+  projectsDb,
+  recordAuditLog,
+  syncFromFirestore,
+  timeRecordsDb,
+  workerDocumentsDb,
+  workerInvitationsMap,
+  workersDb
+};

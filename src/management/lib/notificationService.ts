@@ -4,7 +4,7 @@
  */
 
 import { db } from '../firebase';
-import { doc, setDoc, collection } from 'firebase/firestore';
+import { doc, setDoc, collection } from '../../supabase/documentCompat';
 import { getObraOverheadAllocationMap } from '../types';
 import { sanitizeForFirestore } from './firestoreSanitizer';
 

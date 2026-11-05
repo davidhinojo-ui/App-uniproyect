@@ -10,7 +10,7 @@ import {
 import { 
   searchGmailMessages, downloadGmailAttachmentAsBase64, GmailMessageItem, GmailAttachmentMeta 
 } from '../lib/gmailService';
-import { User } from 'firebase/auth';
+import { User } from '../../supabase/authCompat';
 import { 
   Mail, FileText, ChevronRight, RefreshCw, 
   Search, ArrowLeft, LogOut, CheckCircle, AlertCircle, Sparkles, Loader2, Inbox, Calendar, User as UserIcon

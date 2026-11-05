@@ -77,6 +77,8 @@ export const App: React.FC = () => {
         }
       }
 
+      const activationToken = new URLSearchParams(hash.includes('?') ? hash.split('?')[1] : hash.replace(/^#/, '')).get('token') || new URLSearchParams(search).get('token');
+      if (activationToken) { setRouteToken(activationToken); setPendingWorkerId(null); setIsLoginView(false); return; }
       if (workerIdFound) {
         setPendingWorkerId(workerIdFound);
         setRouteToken(null);
@@ -115,6 +117,11 @@ export const App: React.FC = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
+      const directPortal = /portal|login-operario|w=|token=/.test(window.location.hash) || /portal=|workerId=|w=|token=/.test(window.location.search);
+      if (directPortal) {
+        try { setActiveWorker(await api.getCurrentWorker()); } catch { setIsLoginView(true); }
+        return;
+      }
       const [wList, pList, rList] = await Promise.all([
         api.getWorkers(),
         api.getAllProjects(),
@@ -205,7 +212,7 @@ export const App: React.FC = () => {
   const handleWorkerActivated = (worker: Worker) => {
     setActiveWorker(worker);
     setRouteToken(null);
-    window.location.hash = '';
+    window.location.hash = '#portal';
     fetchData();
   };
 
@@ -220,9 +227,9 @@ export const App: React.FC = () => {
     setPendingWorkerId(null);
     setIsLoginView(false);
     try {
-      localStorage.removeItem('uniproyect_worker_id');
+      localStorage.removeItem('uniproyect_worker_id'); localStorage.removeItem('uniproyect_worker_token');
     } catch (_) {}
-    window.location.hash = '';
+    window.location.hash = '#portal';
     fetchData();
   };
 
@@ -246,7 +253,7 @@ export const App: React.FC = () => {
               setRevokedWorkerNotice(null);
               setPendingWorkerId(null);
               try {
-                localStorage.removeItem('uniproyect_worker_id');
+                localStorage.removeItem('uniproyect_worker_id'); localStorage.removeItem('uniproyect_worker_token');
               } catch (_) {}
               window.location.hash = '';
             }}
@@ -280,7 +287,7 @@ export const App: React.FC = () => {
         onSuccess={(worker) => {
           setActiveWorker(worker);
           setIsLoginView(false);
-          window.location.hash = '';
+          window.location.hash = '#portal';
         }}
         onBackToSupervisor={() => {
           setIsLoginView(false);

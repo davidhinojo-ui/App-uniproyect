@@ -1,0 +1,30 @@
+{
+  "score": 1,
+  "summary": "Revisión estática de las reglas versionadas; no acredita las reglas desplegadas. Existen permisos públicos y escalada de privilegios.",
+  "findings": [
+    {
+      "check": "Authority Source / Identity-Level Security",
+      "severity": "critical",
+      "issue": "Múltiples colecciones permiten read/write si true; los bloques duplicados de workers, worker_invitations, time_records y worker_documents conceden acceso aunque otro bloque lo restrinja.",
+      "recommendation": "Eliminar concesiones públicas y definir acceso autenticado por organización/propiedad, coordinando previamente la identidad del backend y el cliente. Verificar con emulador antes de desplegar."
+    },
+    {
+      "check": "The Update Bypass / Authority Source",
+      "severity": "critical",
+      "issue": "Un propietario puede crear o actualizar users/{uid} con role supervisor, y isSupervisor confía en ese mismo documento.",
+      "recommendation": "Reservar asignación de roles a una autoridad administrativa; impedir cambios de role por propietarios."
+    },
+    {
+      "check": "Admin Bootstrapping & Privileges",
+      "severity": "major",
+      "issue": "La excepción administrativa por email no exige email_verified.",
+      "recommendation": "Exigir verificación de email y preferir claims administrativos emitidos por backend."
+    },
+    {
+      "check": "Storage Abuse / Type Safety / The Update Bypass",
+      "severity": "major",
+      "issue": "Las concesiones públicas omiten límites de tamaño y tipos; incluso las reglas restringidas de actualización no reproducen todas las validaciones de creación.",
+      "recommendation": "Validar esquema, claves, tipos, límites y campos inmutables tanto al crear como al actualizar."
+    }
+  ]
+}
