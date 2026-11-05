@@ -4,10 +4,17 @@ import { createServer } from 'node:net';
 import { spawn, type ChildProcess } from 'node:child_process';
 import { once } from 'node:events';
 import { setTimeout } from 'node:timers/promises';
+import { cp, mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 
 let server: ChildProcess;
 let base: string;
+let isolatedCwd: string;
 before(async () => {
+  // No Firebase config or .env: runtime checks must never contact the live database.
+  isolatedCwd = await mkdtemp(path.join(tmpdir(), 'uniproyect-runtime-'));
+  await cp('dist', path.join(isolatedCwd, 'dist'), { recursive: true });
   // Ask the OS for a free port rather than assuming the Cloud Run default.
   const listener = createServer();
   listener.listen(0, '127.0.0.1');
@@ -17,7 +24,8 @@ before(async () => {
   const port = address.port;
   await new Promise<void>((resolve, reject) => listener.close(error => error ? reject(error) : resolve()));
   base = `http://127.0.0.1:${port}`;
-  server = spawn(process.execPath, ['dist/server.cjs'], {
+  server = spawn(process.execPath, [path.resolve('build-server/replica.cjs')], {
+    cwd: isolatedCwd,
     env: { ...process.env, PORT: String(port), NODE_ENV: 'production' }, stdio: 'ignore',
   });
   for (let attempt = 0; attempt < 50; attempt++) {
@@ -33,6 +41,7 @@ after(async () => {
     server.kill();
     await closed;
   }
+  if (isolatedCwd) await rm(isolatedCwd, { recursive: true, force: true });
 });
 
 test('production entry honours PORT and returns healthy JSON', async () => {

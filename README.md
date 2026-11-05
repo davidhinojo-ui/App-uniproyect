@@ -1,3 +1,10 @@
+# UniProyect — réplica Vercel + Supabase
+
+Mismas pantallas y funciones de gestión que el ZIP verificado, con adaptadores Supabase y backend preparado para Vercel. Rama de revisión, sin fusión ni despliegue.
+
+Configuración, datos pendientes y validación: [Guía de la réplica](docs/VERCEL_SUPABASE_REPLICA.md).
+
+---
 <div align="center">
 
 <img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />

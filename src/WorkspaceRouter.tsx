@@ -3,6 +3,7 @@ const Management = lazy(() => import('./management/App.js'));
 const Workforce = lazy(() => import('./App.js').then(module => ({ default: module.App })));
 import { ThemeSwitcher } from './components/ThemeSwitcher.js';
 import './management/management.css';
+import { AuthGate, SignOutButton } from './supabase/AuthGate.js';
 
 export function WorkspaceRouter() {
   const [hash, setHash] = useState(() => window.location.hash);
@@ -47,10 +48,11 @@ export function WorkspaceRouter() {
               <span aria-hidden="true">·</span>
               <span>Control de Obras y Costes</span>
             </div>
+            <SignOutButton />
           </div>
         </nav>
       )}
-      <Suspense fallback={<p role="status" className="p-6 text-white font-medium">Cargando UniProyect…</p>}>
+      <WorkspaceAccess direct={isDirectWorkerPortal}><Suspense fallback={<p role="status" className="p-6 text-white font-medium">Cargando UniProyect…</p>}>
         {workforce ? (
           <>
             <Workforce />
@@ -61,7 +63,11 @@ export function WorkspaceRouter() {
             <Management />
           </div>
         )}
-      </Suspense>
+      </Suspense></WorkspaceAccess>
     </>
   );
+}
+
+function WorkspaceAccess({ direct, children }: { direct: boolean; children: React.ReactNode }) {
+  return direct ? <>{children}</> : <AuthGate>{children}</AuthGate>;
 }

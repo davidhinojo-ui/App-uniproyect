@@ -1,3 +1,4 @@
+import { authorizedFetch } from '../../supabase/http';
 /**
  * @license
  * SPDX-License-Identifier: Apache-2.0
@@ -507,7 +508,7 @@ export default function OtrosGastosManager({
 
       const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
 
-      const response = await fetch('/api/gemini/analyze-structural-expense', {
+      const response = await authorizedFetch('/api/gemini/analyze-structural-expense', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -663,7 +664,7 @@ export default function OtrosGastosManager({
 
       const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
 
-      const response = await fetch('/api/gemini/analyze-structural-expense', {
+      const response = await authorizedFetch('/api/gemini/analyze-structural-expense', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
