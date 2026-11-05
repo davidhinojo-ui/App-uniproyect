@@ -108,11 +108,7 @@ const extractInitialProveedores = (docs: FacturaAlbaran[]): Proveedor[] => {
     'Instalaciones Eléctricas Pérez': 'Instalaciones Eléctricas'
   };
 
-  const nifMap: Record<string, string> = {
-    'Hormigones del Sur S.A.': 'A41221087',
-    'Materiales Arcos y Construcción S.L.': 'B56144883',
-    'Instalaciones Eléctricas Pérez': 'B56788339'
-  };
+  const nifMap: Record<string, string> = {};
 
   const contactMap: Record<string, string> = {
     'Hormigones del Sur S.A.': 'Francisco González',
@@ -120,17 +116,9 @@ const extractInitialProveedores = (docs: FacturaAlbaran[]): Proveedor[] => {
     'Instalaciones Eléctricas Pérez': 'Ignacio Pérez'
   };
 
-  const phoneMap: Record<string, string> = {
-    'Hormigones del Sur S.A.': '+34 956 70 80 40',
-    'Materiales Arcos y Construcción S.L.': '+34 956 70 12 15',
-    'Instalaciones Eléctricas Pérez': '+34 656 12 14 15'
-  };
+  const phoneMap: Record<string, string> = {};
 
-  const emailMap: Record<string, string> = {
-    'Hormigones del Sur S.A.': 'pedidos@hormigonesdelsur.es',
-    'Materiales Arcos y Construcción S.L.': 'ventas@materialesarcos.com',
-    'Instalaciones Eléctricas Pérez': 'electricidadperez@colegio.es'
-  };
+  const emailMap: Record<string, string> = {};
 
   const addressMap: Record<string, string> = {
     'Hormigones del Sur S.A.': 'Ctra. de Jerez km 1.5, Arcos de la Fra. (Cádiz)',
@@ -234,23 +222,11 @@ const extractInitialTrabajadores = (pers: PersonalCost[]): TrabajadorPRL[] => {
     mapUnique.set(p.workerName.trim(), p.role);
   });
 
-  const nifMap: Record<string, string> = {
-    'Manuel Ortega G.': '31877665Y',
-    'Jesús Marín Ruíz': '31988112W',
-    'Alejandro Real H.': '31677221K'
-  };
+  const nifMap: Record<string, string> = {};
 
-  const phoneMap: Record<string, string> = {
-    'Manuel Ortega G.': '+34 611 12 13 14',
-    'Jesús Marín Ruíz': '+34 622 15 16 17',
-    'Alejandro Real H.': '+34 644 19 20 21'
-  };
+  const phoneMap: Record<string, string> = {};
 
-  const emailMap: Record<string, string> = {
-    'Manuel Ortega G.': 'manuel.ortega@jreal.com',
-    'Jesús Marín Ruíz': 'jesus.marin@jreal.com',
-    'Alejandro Real H.': 'alejandro.real@jreal.com'
-  };
+  const emailMap: Record<string, string> = {};
 
   const createInitialPRLChecklist = (): DocumentState[] => {
     return [
@@ -269,7 +245,7 @@ const extractInitialTrabajadores = (pers: PersonalCost[]): TrabajadorPRL[] => {
       nif: nifMap[name] || `31${Math.floor(100000 + Math.random() * 900000)}B`,
       type: 'propio' as const,
       phone: phoneMap[name] || '+34 600 00 00 00',
-      email: emailMap[name] || `operario@jreal.com`,
+      email: emailMap[name] || '',
       role,
       notes: 'Operario asignado de plantilla principal extraído en inicio.',
       associatedObraId: '1',
@@ -439,6 +415,25 @@ export default function App() {
   
   const [activeTab, setActiveTab] = useState<'dashboard' | 'obras' | 'documentos' | 'personal' | 'gastos' | 'informes' | 'copias' | 'control_horario'>('dashboard');
   
+
+  // Experience Mode: 'guided' (Vista Guiada para móvil/encargados) vs 'full' (Vista Completa avanzada)
+  const [viewExperience, setViewExperience] = useState<'guided' | 'full'>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('up_view_experience');
+        if (saved === 'guided' || saved === 'full') return saved;
+      } catch { /* Storage unavailable. */ }
+      return window.innerWidth <= 768 ? 'guided' : 'full';
+    }
+    return 'full';
+  });
+
+  const handleSetViewExperience = (mode: 'guided' | 'full') => {
+    setViewExperience(mode);
+    if (typeof window !== 'undefined') {
+      try { localStorage.setItem('up_view_experience', mode); } catch { /* Storage unavailable. */ }
+    }
+  };
 
   // Mobile More Navigation Drawer state
   const [isMobileMoreMenuOpen, setIsMobileMoreMenuOpen] = useState(false);
@@ -710,15 +705,6 @@ export default function App() {
     setTrabajadores(savedTrabajadores ? JSON.parse(savedTrabajadores) : []);
     setPlantillaTrabajadores(savedPlantilla ? JSON.parse(savedPlantilla) : []);
 
-    // Sync registered obras to supervisor backend if available
-    if (loadedObras.length > 0) {
-      authorizedFetch('/api/supervisor/sync-projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projects: loadedObras }),
-      }).catch(() => {});
-    }
-
     if (!savedPlantilla) {
       authorizedFetch('/api/supervisor/workers')
         .then(res => res.ok ? res.json() : null)
@@ -742,17 +728,6 @@ export default function App() {
         .catch(err => console.warn('Could not load supervisor workers fallback:', err));
     }
   }, []);
-
-  // Keep registered obras synchronized with supervisor & worker portal backend
-  useEffect(() => {
-    if (obras && obras.length > 0) {
-      authorizedFetch('/api/supervisor/sync-projects', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projects: obras }),
-      }).catch(() => {});
-    }
-  }, [obras]);
 
   // Monitor connection changes and automatically trigger synchronization
   useEffect(() => {
@@ -3193,6 +3168,39 @@ export default function App() {
           </div>
           
           <div className="flex flex-wrap items-center justify-between md:justify-end gap-2 shrink-0" id="header-meta-actions">
+            <div className="inline-flex items-center bg-zinc-900/90 rounded-xl p-0.5 border border-white/[0.08] shadow-inner" id="view-mode-switcher" role="group" aria-label="Modalidad de visualización">
+              <button
+                type="button"
+                aria-pressed={viewExperience === 'guided'}
+                onClick={() => handleSetViewExperience('guided')}
+                className={`touch-target px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewExperience === 'guided'
+                    ? 'bg-emerald-500 text-black shadow font-black'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+                title="Vista guiada: navegación simplificada y asistida por tareas para móviles y encargados"
+              >
+                <Compass className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Vista Guiada</span>
+                <span className="sm:hidden">Guiada</span>
+              </button>
+              <button
+                type="button"
+                aria-pressed={viewExperience === 'full'}
+                onClick={() => handleSetViewExperience('full')}
+                className={`touch-target px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                  viewExperience === 'full'
+                    ? 'bg-emerald-500 text-black shadow font-black'
+                    : 'text-white/70 hover:text-white hover:bg-white/5'
+                }`}
+                title="Vista completa: acceso directo a todas las tablas y herramientas avanzadas"
+              >
+                <LayoutGrid className="w-3.5 h-3.5 shrink-0" />
+                <span className="hidden sm:inline">Vista Completa</span>
+                <span className="sm:hidden">Completa</span>
+              </button>
+            </div>
+
             {/* Central Database Live Indicator */}
             <div className="flex items-center gap-1.5 border border-emerald-500/30 bg-emerald-500/10 rounded-xl px-2.5 py-1.5 text-xs text-white" id="central-db-indicator">
               <div className="relative">
@@ -3395,6 +3403,96 @@ export default function App() {
 
       {/* 3. Main Body View Content wrapper with full width for PC displays */}
       <main className="flex-1 w-full max-w-full mx-auto p-4 md:p-6 lg:px-8 xl:px-10 2xl:px-12 space-y-6 pb-24 md:pb-8" id="main-content-viewport">
+        {/* PANEL DE EXPERIENCIA GUIADA (TAREAS ASISTIDAS PARA ENCARGADOS Y SUPERVISORES) */}
+        {viewExperience === 'guided' && (
+          <div className="bg-[#111114] border border-emerald-500/25 rounded-2xl p-4 sm:p-5 shadow-lg no-print animate-fadeIn" id="guided-experience-panel">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 pb-3 border-b border-white/[0.06] mb-3.5">
+              <div className="flex items-center gap-2">
+                <Compass className="w-5 h-5 text-emerald-400 shrink-0" />
+                <h3 className="text-sm font-extrabold text-white uppercase tracking-wider font-display">
+                  Acciones Rápidas Guiadas
+                </h3>
+              </div>
+              <p className="text-[11px] text-white/70">
+                Seleccione la tarea principal a realizar hoy en obra
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {/* 1. Control Horario / Aprobaciones */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('control_horario')}
+                className="touch-target p-3.5 rounded-xl bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.08] hover:border-emerald-500/40 text-left transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 flex items-center gap-1.5">
+                    ⏱️ Control de Jornadas
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-emerald-400 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="text-[11px] text-white/60 leading-tight">
+                  Aprobar partes de hoy con firma digital o revisar fichajes.
+                </p>
+              </button>
+
+              {/* 2. Facturas y Albaranes */}
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveTab('documentos');
+                  handleOpenDocModal();
+                }}
+                className="touch-target p-3.5 rounded-xl bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.08] hover:border-emerald-500/40 text-left transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 flex items-center gap-1.5">
+                    🧾 Subir Factura / Albarán
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-emerald-400 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="text-[11px] text-white/60 leading-tight">
+                  Capturar ticket o albarán con la cámara o carga rápida por IA.
+                </p>
+              </button>
+
+              {/* 3. Obras en curso */}
+              <button
+                type="button"
+                onClick={() => setActiveTab('obras')}
+                className="touch-target p-3.5 rounded-xl bg-white/[0.03] hover:bg-emerald-500/10 border border-white/[0.08] hover:border-emerald-500/40 text-left transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="text-xs font-bold text-white group-hover:text-emerald-400 flex items-center gap-1.5">
+                    🏗️ Proyectos y Obras
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-white/40 group-hover:text-emerald-400 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="text-[11px] text-white/60 leading-tight">
+                  Consultar presupuestos consumidos y costes de la obra activa.
+                </p>
+              </button>
+
+              {/* 4. Portal del Trabajador */}
+              <button
+                type="button"
+                onClick={() => setIsWorkerPortalOpen(true)}
+                className="touch-target p-3.5 rounded-xl bg-gradient-to-r from-amber-500/10 to-amber-600/10 hover:from-amber-500/20 hover:to-amber-600/20 border border-amber-500/30 text-left transition-all group cursor-pointer flex flex-col justify-between"
+              >
+                <div className="flex items-center justify-between w-full mb-1.5">
+                  <span className="text-xs font-bold text-amber-400 flex items-center gap-1.5">
+                    📱 Portal de Operarios
+                  </span>
+                  <ChevronRight className="w-4 h-4 text-amber-400 transition-transform group-hover:translate-x-0.5" />
+                </div>
+                <p className="text-[11px] text-amber-200/70 leading-tight">
+                  Abrir pantalla de fichaje y firma táctil para operarios en móvil.
+                </p>
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Render Dashboard KPI Scorecards if selected dashboard or other than print view / backup */}
         {activeTab !== 'informes' && activeTab !== 'copias' && (
           <div className="no-print" id="dashboard-score-wrap">
@@ -5407,6 +5505,45 @@ export default function App() {
               </button>
             </div>
 
+
+            {/* Quick Experience Mode Switcher inside mobile menu */}
+            <div className="p-3 bg-white/[0.03] rounded-xl border border-white/5">
+              <span className="text-[10px] uppercase tracking-wider font-extrabold text-white/50 block mb-2">
+                Modo de Visualización:
+              </span>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSetViewExperience('guided');
+                    setIsMobileMoreMenuOpen(false);
+                  }}
+                  className={`touch-target p-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                    viewExperience === 'guided'
+                      ? 'bg-emerald-500 text-black font-extrabold shadow'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  <Compass className="w-3.5 h-3.5" />
+                  <span>Vista Guiada</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    handleSetViewExperience('full');
+                    setIsMobileMoreMenuOpen(false);
+                  }}
+                  className={`touch-target p-2 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 cursor-pointer ${
+                    viewExperience === 'full'
+                      ? 'bg-emerald-500 text-black font-extrabold shadow'
+                      : 'bg-white/5 text-white/70 hover:bg-white/10'
+                  }`}
+                >
+                  <LayoutGrid className="w-3.5 h-3.5" />
+                  <span>Vista Completa</span>
+                </button>
+              </div>
+            </div>
 
             {/* Modules Grid */}
             <div className="grid grid-cols-1 gap-1.5">

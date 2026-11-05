@@ -12,14 +12,17 @@ dotenv.config();
 export function createReplicaApp(storeFactory: typeof createStore = createStore) {
 const app=express();
 app.disable('x-powered-by');
+app.enable('case sensitive routing');
 app.use(express.json({limit:'4mb'}));
 app.use(express.urlencoded({limit:'4mb',extended:true}));
 app.use(async (req,res,next)=>{
   if (!req.path.startsWith('/api/') || req.path === '/api/health') return next();
   try {
-    const store=storeFactory();
     const publicPath=['/api/worker-portal/login','/api/worker-portal/verify','/api/worker-portal/activate'].includes(req.path);
     const workerPath=req.path.startsWith('/api/worker-portal/') && !['/api/worker-portal/invitation','/api/worker-portal/revoke'].includes(req.path);
+    const presentedToken = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || '';
+    if (!publicPath && !presentedToken) return res.status(401).json({error:'Inicia sesión para acceder.'});
+    const store=storeFactory();
     let profile=(!publicPath && !workerPath) ? await store.supervisor(req) : null;
     if(req.path.startsWith('/api/gemini/')) return next();
     for(let attempt=0;attempt<4;attempt++) {
@@ -27,15 +30,13 @@ app.use(async (req,res,next)=>{
       const writes:DocumentWrite[]=[];
       const service=createPortalService(state,writes,management);
       await service.syncFromFirestore();
-      const presentedToken = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || '';
       const hadSession = !!state.sessions[hashToken(presentedToken)];
       // Expired sessions and inactive workers cannot reuse an old session after reactivation.
       for(const [key,session] of Object.entries(state.sessions)) {
         if(session.expiresAt<=Date.now() || !state.workers.some(worker=>worker.id===session.workerId && worker.status==='active')) delete state.sessions[key];
       }
       if(workerPath && !publicPath) {
-        const token=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || '';
-        const session=state.sessions[hashToken(token)];
+        const session=state.sessions[hashToken(presentedToken)];
         if(!session) {
           if(hadSession) {
             if(await store.commit(revision,state,[])) return res.status(401).json({error:'Tu sesión ha caducado o tu portal se ha desactivado.'});
@@ -226,34 +227,9 @@ app.post('/api/supervisor/projects', (req, res) => {
   }
 });
 
-app.post('/api/supervisor/sync-projects', (req, res) => {
-  try {
-    const { projects } = req.body;
-    if (Array.isArray(projects)) {
-      projectsDb.length = 0;
-      for (const p of projects) {
-        if (p && p.name) {
-          projectsDb.push({
-            id: p.id || `proj-${crypto.randomUUID()}`,
-            organizationId: process.env.SUPABASE_ORGANIZATION_ID!,
-            code: p.code || p.id || '',
-            name: String(p.name).trim(),
-            address: String(p.address || p.location || '').trim(),
-            client: String(p.client || p.description || '').trim(),
-            status: p.status === 'on_hold' ? 'paused' : (p.status || 'active'),
-            supervisorName: p.supervisorName || 'David Hinojo (Supervisor General)',
-            budget: Number(p.budget) || 0,
-            laborCostTotal: Number(p.laborCostTotal) || 0,
-            materialCostTotal: Number(p.materialCostTotal) || 0,
-            createdAt: p.startDate || p.createdAt || new Date().toISOString(),
-          });
-        }
-      }
-    }
-    res.json({ success: true, count: projectsDb.length });
-  } catch (err: any) {
-    res.status(500).json({ error: err.message });
-  }
+// Older clients can request a refresh, but Supabase is the source of the project list.
+app.post('/api/supervisor/sync-projects', (_req, res) => {
+  res.json({ success: true, count: projectsDb.length });
 });
 
 app.get('/api/supervisor/time-records', (req, res) => {

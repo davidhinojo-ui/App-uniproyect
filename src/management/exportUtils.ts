@@ -247,8 +247,8 @@ export async function exportToExcel(
 
   const subCell = wsDash.getCell('B3');
   subCell.value = isAll
-    ? `Consolidación General de Obras ── José Real Construcciones, S.L. ── Generado el ${fechaGeneracion}`
-    : `Proyecto: ${obraSelected.name} ── José Real Construcciones, S.L. ── Impreso: ${fechaGeneracion}`;
+    ? `Consolidación General de Obras ── UniProyect ── Generado el ${fechaGeneracion}`
+    : `Proyecto: ${obraSelected.name} ── UniProyect ── Impreso: ${fechaGeneracion}`;
   subCell.font = { name: 'Segoe UI', size: 9.5, italic: true, color: { argb: 'FF10B981' } };
   subCell.alignment = { vertical: 'middle', horizontal: 'center' };
   wsDash.mergeCells('B3:I3');
@@ -656,7 +656,7 @@ export async function exportToExcel(
   wsDocs.views = [{ showGridLines: true }];
 
   // Title Block
-  wsDocs.getCell('A1').value = 'JOSÉ REAL CONSTRUCCIONES, S.L. ── REGISTRO DE SUMINISTROS Y SUBCONTRATAS';
+  wsDocs.getCell('A1').value = 'UNIPROYECT ── REGISTRO DE SUMINISTROS Y SUBCONTRATAS';
   wsDocs.getCell('A1').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF047857' } };
   
   const subtitleLabel = isAll 
@@ -833,7 +833,7 @@ export async function exportToExcel(
   wsPers.views = [{ showGridLines: true }];
 
   // Title Block
-  wsPers.getCell('A1').value = 'JOSÉ REAL CONSTRUCCIONES, S.L. ── AUDITORÍA DE REGISTROS DE PERSONAL';
+  wsPers.getCell('A1').value = 'UNIPROYECT ── AUDITORÍA DE REGISTROS DE PERSONAL';
   wsPers.getCell('A1').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF047857' } };
   wsPers.getCell('A2').value = `Consolidación de horas de peonaje, oficiales y mandos por fecha y pro-rata`;
   wsPers.getCell('A2').font = { name: 'Segoe UI', size: 9.5, italic: true, color: { argb: 'FF555555' } };
@@ -912,7 +912,7 @@ export async function exportToExcel(
   const wsOver = workbook.addWorksheet('🏢 Gastos Indirectos');
   wsOver.views = [{ showGridLines: true }];
 
-  wsOver.getCell('A1').value = 'JOSÉ REAL CONSTRUCCIONES, S.L. ── TRANSPORTE, SEGUROS Y GASTOS GENERALES';
+  wsOver.getCell('A1').value = 'UNIPROYECT ── TRANSPORTE, SEGUROS Y GASTOS GENERALES';
   wsOver.getCell('A1').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF047857' } };
   
   const overheadSubtitle = isAll 
@@ -1062,7 +1062,7 @@ export async function exportDocsListToExcel(
   });
 
   // Title Block
-  ws.getCell('A1').value = 'JOSÉ REAL CONSTRUCCIONES, S.L. ── EXPORTACIÓN DE FACTURAS Y ALBARANES';
+  ws.getCell('A1').value = 'UNIPROYECT ── EXPORTACIÓN DE FACTURAS Y ALBARANES';
   ws.getCell('A1').font = { name: 'Segoe UI', size: 12, bold: true, color: { argb: 'FF047857' } };
   
   ws.getCell('A2').value = `Total registros emitidos: ${docs.length} unidades ── Generado el ${new Date().toLocaleString('es-ES')}`;

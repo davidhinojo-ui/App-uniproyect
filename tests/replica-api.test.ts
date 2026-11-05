@@ -13,6 +13,20 @@ test('PIN credentials are salted and reject legacy plaintext', () => {
   assert.ok(!verifyPin('123456', '123456'));
 });
 
+test('protected API routes reject requests without a token before opening the store', async (context) => {
+  const server = createReplicaApp(() => { throw new Error('Store must not be opened'); }).listen(0, '127.0.0.1');
+  context.after(() => new Promise<void>(resolve => server.close(() => resolve())));
+  await once(server, 'listening');
+  const address = server.address();
+  assert.ok(address && typeof address !== 'string');
+  const base = `http://127.0.0.1:${address.port}`;
+  for (const route of ['/api/supervisor/time-records', '/api/worker-portal/me', '/api/gemini/analyze']) {
+    assert.equal((await fetch(base + route)).status, 401);
+  }
+  const alternateCase = await fetch(base + '/API/gemini/analyze', { method: 'POST' });
+  assert.equal(alternateCase.status, 404);
+});
+
 test('persistent portal flow: QR, activation, authenticated shift, approval and restart', async () => {
   let persisted: any = {}, revision = 0;
   let simulateConflict = false;

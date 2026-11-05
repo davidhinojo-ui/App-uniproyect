@@ -135,7 +135,7 @@ export default function ExportObraModal({
       }
 
       const folderId = await getOrCreateDriveFolderAtPath(token, [
-        'José Real Construcciones, S.L.',
+        'UniProyect',
         'Consolidado',
         'Exportaciones de Obras'
       ]);
@@ -153,7 +153,7 @@ export default function ExportObraModal({
 
       setDriveResult({
         success: true,
-        msg: `Copia guardada en Google Drive: "/José Real Construcciones, S.L./Consolidado/Exportaciones de Obras/${filename}"`,
+        msg: `Copia guardada en Google Drive: "/UniProyect/Consolidado/Exportaciones de Obras/${filename}"`,
       });
     } catch (err: any) {
       console.error('Error saving to Drive:', err);

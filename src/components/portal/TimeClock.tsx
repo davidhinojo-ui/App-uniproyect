@@ -39,7 +39,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
   const [selectedProjectId, setSelectedProjectId] = useState<string>(defaultProj);
   const [notes, setNotes] = useState('');
   const [locationStatus, setLocationStatus] = useState<'idle' | 'locating' | 'ready' | 'error'>('idle');
-  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number; accuracy: number } | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [feedback, setFeedback] = useState<{
     type: 'success' | 'error';
@@ -66,6 +66,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
 
   // Request GPS coordinates
   const handleGetLocation = () => {
+    setCoords(null);
     if (!navigator.geolocation) {
       setLocationStatus('error');
       return;
@@ -76,13 +77,12 @@ export const TimeClock: React.FC<TimeClockProps> = ({
         setCoords({
           latitude: pos.coords.latitude,
           longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
         });
         setLocationStatus('ready');
       },
       () => {
-        // Fallback gracefully so worker can still clock in without blocking
-        setLocationStatus('ready');
-        setCoords({ latitude: 28.1235, longitude: -15.4362 });
+        setLocationStatus('error');
       },
       { timeout: 8000 }
     );
@@ -103,14 +103,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
         projectId: selectedProjectId,
         type,
         notes: notes.trim(),
-        location: coords
-          ? {
-              latitude: coords.latitude,
-              longitude: coords.longitude,
-              accuracy: 15,
-              address: 'Obra validada por GPS',
-            }
-          : undefined,
+        location: coords ?? undefined,
       });
 
       setFeedback({
@@ -137,7 +130,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
   );
   const availableProjects = authorizedProjects.length > 0 ? authorizedProjects : projects;
 
-  const activeProjectName = projects.find((p) => p.id === latestRecord?.projectId)?.name;
+  const activeProjectName = projects.find((p) => p.id === latestRecord?.projectId)?.name || latestRecord?.projectName;
 
   return (
     <div className="space-y-5 max-w-lg mx-auto">
@@ -162,7 +155,7 @@ export const TimeClock: React.FC<TimeClockProps> = ({
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full text-xs font-bold bg-slate-800 text-slate-400 border border-slate-700">
               <span className="w-2 h-2 rounded-full bg-slate-500"></span>
-              NO INICIADO (Fuera de jornada)
+              {latestRecord?.type === 'check_out' ? `Jornada cerrada · ${activeProjectName}` : 'NO INICIADO (Fuera de jornada)'}
             </span>
           )}
         </div>
@@ -240,8 +233,8 @@ export const TimeClock: React.FC<TimeClockProps> = ({
               {locationStatus === 'locating'
                 ? 'Localizando...'
                 : coords
-                ? 'Verificada ✓'
-                : 'Activar GPS'}
+                ? 'Obtenida ✓'
+                : locationStatus === 'error' ? 'No disponible · Reintentar' : 'Activar GPS'}
             </span>
           </button>
         </div>

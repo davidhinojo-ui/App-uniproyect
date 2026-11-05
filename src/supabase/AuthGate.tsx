@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getSupabase } from './client.js';
+import { getSupabase, supervisorContext } from './client.js';
 import { auth, onAuthStateChanged, type User } from './authCompat.js';
 
 export function AuthGate({ children }: { children: React.ReactNode }) {
@@ -7,9 +7,28 @@ export function AuthGate({ children }: { children: React.ReactNode }) {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [access, setAccess] = useState<{ uid: string; error?: string }>();
   useEffect(() => onAuthStateChanged(auth, value => { setUser(value); setReady(true); }), []);
+  const uid = user?.uid;
+  useEffect(() => {
+    if (!uid) {
+      setAccess(undefined);
+      return;
+    }
+    let active = true;
+    supervisorContext().then(({ session }) => {
+      if (active && session.user.id === uid) setAccess({ uid });
+    }).catch(() => {
+      if (active) setAccess({ uid, error: 'No se ha podido verificar tu acceso al área de gestión.' });
+    });
+    return () => { active = false; };
+  }, [uid]);
   if (!ready) return <p role="status" className="p-6 text-slate-300">Cargando UniProyect…</p>;
-  if (user) return <>{children}</>;
+  if (uid) {
+    if (access?.uid !== uid) return <p role="status" className="p-6 text-slate-300">Comprobando permisos…</p>;
+    if (access.error) return <p role="alert" className="p-6 text-rose-300">{access.error}</p>;
+    return <>{children}</>;
+  }
   const login = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault(); setBusy(true); setError('');
     const data = new FormData(event.currentTarget);

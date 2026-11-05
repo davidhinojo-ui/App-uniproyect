@@ -211,15 +211,16 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
                     </td>
 
                     <td className="py-3 px-4">
-                      {record.type === 'check_out' && record.hoursWorked ? (
+                      {record.type === 'check_out' ? (
                         <div>
-                          <span className="font-semibold text-white">{record.hoursWorked}h</span>
-                          <span className="text-emerald-400 font-bold ml-1.5">
-                            +{record.calculatedCost?.toFixed(2)} €
-                          </span>
+                          <span className="block font-semibold text-emerald-400">Jornada cerrada</span>
+                          {record.hoursWorked != null && <span className="font-semibold text-white">{record.hoursWorked} h</span>}
+                          {record.calculatedCost != null && (
+                            <span className="text-emerald-400 font-bold ml-1.5">+{record.calculatedCost.toFixed(2)} €</span>
+                          )}
                         </div>
                       ) : (
-                        <span className="text-slate-500 italic">En curso...</span>
+                        <span className="text-slate-500 italic">Entrada registrada</span>
                       )}
                     </td>
 
@@ -227,7 +228,7 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
                       {record.location && (
                         <span className="flex items-center gap-1 text-[11px] text-emerald-400/90 mb-0.5">
                           <MapPin className="w-3 h-3 shrink-0" />
-                          GPS validado
+                          Ubicación registrada
                         </span>
                       )}
                       <span className="truncate block text-slate-300 text-[11px]">{record.notes}</span>
@@ -254,7 +255,7 @@ export const TimeRecordsOverview: React.FC<TimeRecordsOverviewProps> = ({
                           <span>{approvingId === record.id ? 'Imputando...' : 'Dar Visto Bueno'}</span>
                         </button>
                       ) : (
-                        <span className="text-slate-500 text-[11px] italic">En jornada</span>
+                        <span className="text-slate-500 text-[11px]">—</span>
                       )}
                     </td>
                   </tr>

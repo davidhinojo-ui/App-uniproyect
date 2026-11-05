@@ -80,7 +80,7 @@ export default function ReportViewer({
       const fileName = `Informe_Balance_${obraLabel.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.md`;
 
       const textDescription = `
-## JOSÉ REAL CONSTRUCCIONES, S.L. - REPORTE DE BALANCE DE GASTOS DE OBRA
+## UNIPROYECT - REPORTE DE BALANCE DE GASTOS DE OBRA
 ---
 * **Proyecto / Obra Analizada:** ${obraLabel}
 * **Rango de Fechas analizado:** ${periodLabel}
@@ -386,16 +386,16 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
         doc.setTextColor(16, 185, 129); // emerald-500
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(8);
-        doc.text('JOSÉ REAL CONSTRUCCIONES, S.L.', 33, 25.5);
+        doc.text('UNIPROYECT', 33, 25.5);
 
         // Company Metadata Context on Top Right
         doc.setTextColor(71, 85, 105); // slate-600
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(7.5);
-        doc.text('JOSÉ REAL CONSTRUCCIONES, S.L.', 195, 17, { align: 'right' });
+        doc.text('UNIPROYECT', 195, 17, { align: 'right' });
         doc.text('NIF: B-56755085', 195, 21, { align: 'right' });
         doc.text('C/ Amapola 8, 11.630, Arcos de la Frontera', 195, 25, { align: 'right' });
-        doc.text('Telf: +34 640 37 27 27 | Correo: jrealconstruccion@gmail.com', 195, 29, { align: 'right' });
+        doc.text('Telf: [TELÉFONO EMPRESA] | Correo: empresa@ejemplo.invalid', 195, 29, { align: 'right' });
 
         // Flat Colored Divider Line
         doc.setDrawColor(16, 185, 129); // Emerald Line
@@ -826,7 +826,7 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
       doc.setTextColor(71, 85, 105); // slate-600
       doc.setFont('helvetica', 'bold');
       doc.setFontSize(8);
-      doc.text('José Real Construcciones, S.L.', 125, nextY + 21);
+      doc.text('UniProyect', 125, nextY + 21);
 
       // 6. Second pass: Draw Running Headers on page > 1, page decoration borders, and page numbers
       const totalPages = doc.getNumberOfPages();
@@ -915,7 +915,7 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
               : (obras.find(o => o.id === localObraId)?.name || 'Consolidado');
               
             const driveFolderId = await getOrCreateDriveFolderAtPath(token, [
-              "José Real Construcciones, S.L.",
+              "UniProyect",
               obraLabel,
               "Informes Financieros y Balances"
             ]);
@@ -1059,15 +1059,15 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
             </div>
             <div>
               <div className="text-xl tracking-wider font-extrabold text-white print:text-black uppercase leading-none">Uniproyect</div>
-              <p className="text-[10px] text-[#10B981] print:text-slate-500 uppercase tracking-widest font-black mt-1">José Real Construcciones, S.L.</p>
+              <p className="text-[10px] text-[#10B981] print:text-slate-500 uppercase tracking-widest font-black mt-1">UniProyect</p>
             </div>
           </div>
 
           <div className="text-xs text-white/70 print:text-slate-600 space-y-1 font-mono md:text-right" id="report-letterhead-data">
-            <h4 className="font-extrabold text-[#10B981] print:text-[#111] leading-none">JOSÉ REAL CONSTRUCCIONES, S.L.</h4>
+            <h4 className="font-extrabold text-[#10B981] print:text-[#111] leading-none">UNIPROYECT</h4>
             <p>NIF: B-56755085</p>
             <p>C/ Amapola 8, 11.630, Arcos de la Frontera</p>
-            <p>Telf: +34 640 37 27 27 | Correo: jrealconstruccion@gmail.com</p>
+            <p>Telf: [TELÉFONO EMPRESA] | Correo: empresa@ejemplo.invalid</p>
           </div>
         </div>
 
@@ -1457,8 +1457,8 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
         <div className="mt-16 grid grid-cols-2 gap-12 text-center text-[10px] text-white/40 print:text-slate-500 border-t border-white/10 print:border-slate-200 pt-10 page-break-inside-avoid animate-fadeIn" id="report-signatures-panel">
           <div>
             <div className="h-16 flex items-end justify-center pb-2 underline font-sans italic text-white/30 print:text-slate-300">Firma Manual / Sello Administrativo</div>
-            <div className="font-extrabold text-white print:text-slate-800 uppercase tracking-widest font-sans" id="firm-gerente-sign">Fdo. D. José Real Ramirez</div>
-            <div className="text-white/40 print:text-slate-400 font-sans">Gerente General - José Real Construcciones, S.L.</div>
+            <div className="font-extrabold text-white print:text-slate-800 uppercase tracking-widest font-sans" id="firm-gerente-sign">Fdo. D. Responsable de empresa</div>
+            <div className="text-white/40 print:text-slate-400 font-sans">Gerente General - UniProyect</div>
           </div>
           <div>
             <div className="h-16 flex items-end justify-center pb-2 underline font-sans italic text-white/30 print:text-slate-300">Firma Manual / Certificación Técnica</div>
@@ -1539,15 +1539,15 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
                     </div>
                     <div>
                       <div className="text-lg tracking-wider font-extrabold text-black uppercase leading-none font-sans">Uniproyect</div>
-                      <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold font-sans mt-0.5">José Real Construcciones, S.L.</p>
+                      <p className="text-[9px] text-slate-500 uppercase tracking-widest font-bold font-sans mt-0.5">UniProyect</p>
                     </div>
                   </div>
 
                   <div className="text-[9px] text-slate-600 space-y-0.5 font-mono md:text-right">
-                    <h4 className="font-extrabold text-black leading-none font-sans">JOSÉ REAL CONSTRUCCIONES, S.L.</h4>
+                    <h4 className="font-extrabold text-black leading-none font-sans">UNIPROYECT</h4>
                     <p>NIF: B-56755085</p>
                     <p>C/ Amapola 8, Arcos de la Frontera</p>
-                    <p>Telf: +34 640 37 27 27 | jrealconstruccion@gmail.com</p>
+                    <p>Telf: [TELÉFONO EMPRESA] | empresa@ejemplo.invalid</p>
                   </div>
                 </div>
 
@@ -1802,7 +1802,7 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
                   <div className="mt-12 grid grid-cols-2 gap-8 text-center text-[8px] text-slate-500 border-t border-slate-150 pt-6">
                     <div>
                       <div className="h-10 flex items-end justify-center pb-1 underline font-sans italic text-slate-350">Firma Autorizada</div>
-                      <div className="font-extrabold text-slate-800 uppercase tracking-wider font-sans">José Real Ramirez - Gerente</div>
+                      <div className="font-extrabold text-slate-800 uppercase tracking-wider font-sans">Responsable de empresa - Gerente</div>
                     </div>
                     <div>
                       <div className="h-10 flex items-end justify-center pb-1 underline font-sans italic text-slate-350">Certificación de Obra</div>
@@ -1928,15 +1928,15 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
             </div>
             <div>
               <div className="text-lg tracking-wider font-extrabold uppercase leading-none" style={{ color: '#000000' }}>Uniproyect</div>
-              <p className="text-[9px] uppercase tracking-widest font-bold mt-0.5" style={{ color: '#64748b' }}>José Real Construcciones, S.L.</p>
+              <p className="text-[9px] uppercase tracking-widest font-bold mt-0.5" style={{ color: '#64748b' }}>UniProyect</p>
             </div>
           </div>
 
           <div className="text-[9px] font-mono text-right leading-relaxed" style={{ color: '#475569' }}>
-            <h4 className="font-extrabold leading-none font-sans" style={{ color: '#000000' }}>JOSÉ REAL CONSTRUCCIONES, S.L.</h4>
+            <h4 className="font-extrabold leading-none font-sans" style={{ color: '#000000' }}>UNIPROYECT</h4>
             <p className="mt-0.5">NIF: B-56755085</p>
             <p>C/ Amapola 8, Arcos de la Frontera</p>
-            <p>Telf: +34 640 37 27 27 | jrealconstruccion@gmail.com</p>
+            <p>Telf: [TELÉFONO EMPRESA] | empresa@ejemplo.invalid</p>
           </div>
         </div>
 
@@ -2177,7 +2177,7 @@ ${filteredPersonal.map(p => `* **${p.workerName}** (${p.role}): ${p.hours.toFixe
           <div className="mt-6 grid grid-cols-2 gap-6 text-center text-[7px] pt-3 pb-1" style={{ borderTop: '1px solid #cbd5e1', color: '#64748b' }}>
             <div>
               <div className="h-6 flex items-end justify-center pb-1 underline italic" style={{ color: '#94a3b8' }}>Firma Autorizada</div>
-              <div className="font-extrabold uppercase tracking-wider" style={{ color: '#1e293b' }}>José Real Ramirez - Gerente</div>
+              <div className="font-extrabold uppercase tracking-wider" style={{ color: '#1e293b' }}>Responsable de empresa - Gerente</div>
             </div>
             <div>
               <div className="h-6 flex items-end justify-center pb-1 underline italic" style={{ color: '#94a3b8' }}>Certificación de Obra</div>

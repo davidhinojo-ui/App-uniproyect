@@ -40,6 +40,27 @@ export const App: React.FC = () => {
   const [supervisorTab, setSupervisorTab] = useState<SupervisorTab>('workers');
 
 
+  // Experience Mode: 'guided' (Vista Guiada) vs 'complete' (Vista Completa)
+  const [viewExperience, setViewExperience] = useState<ViewExperience>(() => {
+    try {
+      const saved = localStorage.getItem(VIEW_STORAGE_KEY);
+      if (saved === 'guided' || saved === 'complete') return saved;
+      // Default to guided on mobile screens
+      return window.innerWidth < 768 ? 'guided' : 'complete';
+    } catch {
+      return 'guided';
+    }
+  });
+
+  const handleToggleViewExperience = (mode: ViewExperience) => {
+    setViewExperience(mode);
+    try {
+      localStorage.setItem(VIEW_STORAGE_KEY, mode);
+    } catch {
+      // storage unavailable
+    }
+  };
+
   // Modals for Guided actions
   const [isAssistedClockOpen, setIsAssistedClockOpen] = useState(false);
   const [activeQrInvitation, setActiveQrInvitation] = useState<WorkerInvitation | null>(null);
@@ -354,6 +375,41 @@ export const App: React.FC = () => {
 
           {/* Quick Controls: Fast Actions */}
           <div className="flex items-center flex-wrap gap-2.5">
+            {/* SELECTOR ACCESIBLE «Guiada / Completa» */}
+            <div
+              className="inline-flex p-1 bg-slate-800/90 border border-slate-700 rounded-2xl shadow-inner"
+              role="group"
+              aria-label="Modalidad de visualización: Guiada o Completa"
+            >
+              <button
+                type="button"
+                aria-pressed={viewExperience === 'guided'}
+                onClick={() => handleToggleViewExperience('guided')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  viewExperience === 'guided'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Compass className="w-3.5 h-3.5" />
+                <span>Vista Guiada</span>
+              </button>
+
+              <button
+                type="button"
+                aria-pressed={viewExperience === 'complete'}
+                onClick={() => handleToggleViewExperience('complete')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                  viewExperience === 'complete'
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-600/30'
+                    : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span>Vista Completa</span>
+              </button>
+            </div>
+
             <button
               onClick={() => setIsLoginView(true)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs font-semibold border border-slate-700 transition-colors cursor-pointer"
@@ -444,6 +500,22 @@ export const App: React.FC = () => {
 
       {/* Main Supervisor Content */}
       <main className="flex-1 up-workspace mx-auto w-full p-4 sm:p-8 space-y-8">
+        {/* EXPERIENCIA GUIADA: Hero con ACCIONES RÁPIDAS GUIADAS */}
+        {viewExperience === 'guided' && (
+          <QuickGuidedActions
+            workers={workers}
+            projects={projects}
+            records={records}
+            onOpenClockIn={() => setIsAssistedClockOpen(true)}
+            onOpenQrGenerator={handleQuickGenerateQr}
+            onNavigateToTab={(tab) => {
+              setSupervisorTab(tab);
+              handleToggleViewExperience('complete');
+            }}
+            onOpenWorkerPortalLogin={() => setIsLoginView(true)}
+          />
+        )}
+
         {supervisorTab === 'workers' && (
           <WorkerManagement
             workers={workers}
