@@ -84,6 +84,16 @@ test('persistent portal flow: QR, activation, authenticated shift, approval and 
     server = createReplicaApp(factory).listen(0, '127.0.0.1'); await once(server, 'listening');
     assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).data.worker.id, id);
     assert.equal((await request(`/api/worker-portal/time-records?workerId=${id}`, undefined, workerToken)).data.records.length, 2);
+    const workerLogin = await request('/api/worker-portal/login', { identifier: id, pin: '123456' });
+    assert.equal(workerLogin.status, 200);
+    const removed = structuredClone(rows.plantillaTrabajadores);
+    rows.plantillaTrabajadores = [];
+    assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).status, 401);
+    rows.plantillaTrabajadores = removed;
+    assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).status, 401);
+    const freshLogin = await request('/api/worker-portal/login', { identifier: id, pin: '123456' });
+    // Removing the master worker also discards its credentials; a new invitation is required.
+    assert.equal(freshLogin.status, 403);
     const revoked = await request(`/api/supervisor/workers/${id}/revoke-portal`, {}, 'supervisor-test');
     assert.equal(revoked.status, 200);
     assert.equal((await request('/api/worker-portal/me', undefined, workerToken)).status, 401);

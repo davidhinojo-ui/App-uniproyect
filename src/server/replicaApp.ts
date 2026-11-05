@@ -25,7 +25,9 @@ app.use(async (req,res,next)=>{
       const {state,revision,management}=await store.load();
       const writes:DocumentWrite[]=[];
       const service=createPortalService(state,writes,management);
-      if(profile) await service.syncFromFirestore();
+      await service.syncFromFirestore();
+      const presentedToken = req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || '';
+      const hadSession = !!state.sessions[hashToken(presentedToken)];
       // Expired sessions and inactive workers cannot reuse an old session after reactivation.
       for(const [key,session] of Object.entries(state.sessions)) {
         if(session.expiresAt<=Date.now() || !state.workers.some(worker=>worker.id===session.workerId && worker.status==='active')) delete state.sessions[key];
@@ -34,9 +36,12 @@ app.use(async (req,res,next)=>{
         const token=req.headers.authorization?.match(/^Bearer (.+)$/)?.[1] || '';
         const session=state.sessions[hashToken(token)];
         if(!session) {
+          if(hadSession) {
+            if(await store.commit(revision,state,[])) return res.status(401).json({error:'Tu sesión ha caducado o tu portal se ha desactivado.'});
+            continue;
+          }
           // Assisted clocking and supervisor preview retain the same server-side authorization.
           profile = await store.supervisor(req);
-          await service.syncFromFirestore();
         }
         const requested=req.body?.workerId || req.query.workerId;
         if(session && requested && requested!==session.workerId) return res.status(403).json({error:'No puedes acceder a otro trabajador.'});
@@ -54,6 +59,12 @@ app.use(async (req,res,next)=>{
         state.attempts[rateKey]={count:(previous?.until>Date.now()?previous.count:0)+1,until:Date.now()+15*60*1000};
       }
       const result=await runPortal(req,service);
+      if(profile && result.status<400 && req.path==='/api/supervisor/projects' && req.method==='POST') {
+        const project = result.body.project;
+        if(project) writes.push({ collection:'obras', id:project.id, action:'set', data:{
+          ...project, location:project.address, description:project.client,
+        }});
+      }
       if(profile && result.status<400 && /^\/api\/supervisor\/workers(?:\/[^/]+)?$/.test(req.path) && ['POST','PUT'].includes(req.method)) {
         const worker = result.body.worker;
         if(worker) {

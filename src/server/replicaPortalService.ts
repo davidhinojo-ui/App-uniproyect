@@ -43,7 +43,7 @@ async function syncFromFirestore(): Promise<void> {
       getDocs(collection(firestoreDb, 'obras'))
     ]);
 
-    if (!obrasSnap.empty) {
+    {
       projectsDb.length = 0;
       obrasSnap.forEach((d) => {
         const data = d.data();
@@ -57,13 +57,13 @@ async function syncFromFirestore(): Promise<void> {
           status: data.status === 'on_hold' ? 'paused' : (data.status || 'active'),
           supervisorName: 'David Hinojo (Supervisor General)',
           budget: Number(data.budget) || 0,
-          laborCostTotal: 0,
+          laborCostTotal: (management.personal || []).filter(item => item.obraId === d.id).reduce((sum, item) => sum + (Number(item.totalCost) || 0), 0),
           createdAt: data.startDate || new Date().toISOString(),
         });
       });
     }
 
-    if (!workersSnap.empty) {
+    {
       const previousWorkers = new Map(workersDb.map(worker => [worker.id, worker]));
       workersDb.length = 0;
       workersSnap.forEach((d) => {
