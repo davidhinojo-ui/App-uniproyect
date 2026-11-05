@@ -1,4 +1,5 @@
 import crypto from 'crypto';
+import { validateShift } from './shiftValidation.js';
 import QRCode from 'qrcode';
 import { Request, Response } from 'express';
 import fs from 'fs';
@@ -861,26 +862,12 @@ export async function handleTimeRecord(req: Request, res: Response) {
     let hoursWorked: number | undefined;
     let calculatedCost: number | undefined;
 
-    // If check_out, calculate elapsed hours from the latest check_in
+    const shift = validateShift(timeRecordsDb, worker.id, projectId, type, nowIso);
+    if ('error' in shift) return res.status(409).json({ error: shift.error });
+    hoursWorked = shift.hoursWorked;
     if (type === 'check_out') {
-      const recentCheckIn = timeRecordsDb
-        .filter((tr) => tr.workerId === worker.id && tr.projectId === projectId && tr.type === 'check_in')
-        .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())[0];
-
-      if (recentCheckIn) {
-        const startMs = new Date(recentCheckIn.timestamp).getTime();
-        const endMs = new Date(nowIso).getTime();
-        const diffHours = (endMs - startMs) / (1000 * 60 * 60);
-        // Minimum sensible time of 0.1h (6 min) if testing immediately, capped at 14h
-        hoursWorked = Math.max(0.1, Math.min(14, Number(diffHours.toFixed(2))));
-      } else {
-        // Standard full day default if no matching checkin recorded earlier
-        hoursWorked = 8.0;
-      }
-
-      calculatedCost = Number((hoursWorked * worker.hourlyRate).toFixed(2));
+      calculatedCost = Number(((hoursWorked ?? 0) * worker.hourlyRate).toFixed(2));
     }
-
     const record: TimeRecord = {
       id: `tr-${Date.now()}-${crypto.randomBytes(3).toString('hex')}`,
       workerId: worker.id,
